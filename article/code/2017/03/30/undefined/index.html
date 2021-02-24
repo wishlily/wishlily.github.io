@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="_Nk6BnUFRZtnEJUeBDVnmuwf3WmBce1pg7RUjI55CSY">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://wishlily.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="牛顿迭代是求出多项式解的一种方法，也可以画出漂亮的分形图。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="牛顿迭代分形">
+<meta property="og:url" content="https://wishlily.github.io/article/code/2017/03/30/undefined/index.html">
+<meta property="og:site_name" content="Wishlily&#39;s blog">
+<meta property="og:description" content="牛顿迭代是求出多项式解的一种方法，也可以画出漂亮的分形图。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_x2+1.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_x3-1.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_x8+15x4-16.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_x7+ix-1.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_err_2.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_err_5.png">
+<meta property="article:published_time" content="2017-03-30T06:55:08.000Z">
+<meta property="article:modified_time" content="2017-03-30T06:55:08.000Z">
+<meta property="article:author" content="Wishlily">
+<meta property="article:tag" content="golang">
+<meta property="article:tag" content="draw">
+<meta property="article:tag" content="分形">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_x2+1.png">
+
+<link rel="canonical" href="https://wishlily.github.io/article/code/2017/03/30/undefined/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>牛顿迭代分形 | Wishlily's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Wishlily's blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Wishlily's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://wishlily.github.io/article/code/2017/03/30/undefined/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Wishlily">
+      <meta itemprop="description" content="幸福就是你此刻坚信着未来会越来越好">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Wishlily's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          牛顿迭代分形
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-03-30 14:55:08" itemprop="dateCreated datePublished" datetime="2017-03-30T14:55:08+08:00">2017-03-30</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/code/" itemprop="url" rel="index">
+                    <span itemprop="name">code</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/article/code/2017/03/30/undefined/" class="post-meta-item leancloud_visitors" data-flag-title="牛顿迭代分形" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/article/code/2017/03/30/undefined/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/article/code/2017/03/30/undefined/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>牛顿迭代是求出多项式解的一种方法，也可以画出漂亮的分形图。</p>
+<a id="more"></a>
+
+<h1 id="牛顿迭代"><a href="#牛顿迭代" class="headerlink" title="牛顿迭代"></a>牛顿迭代</h1><p>过程就不写了，可查看注释，里面分析很清楚。<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup><br>公式：<br>$$ z_{n+1}=z_n+\frac{f(z_n)}{f’(z_n)} $$</p>
+<p>分形图则是根据以上公式在复平面上绘制的。</p>
+<ul>
+<li>确定想要绘制数据范围，如 $z=a+bi,a\in[-1,1],b\in[-1,1]$</li>
+<li>将复平面数据映射在画布上，如 x 轴为实部（a），y 轴为虚部（b）</li>
+<li>画布上每个点进行牛顿迭代，当 $|z_{n+1}-z_n| &lt; 0.001$，即迭代到多项式一个解，根据迭代次数和靠近的解设置该点的颜色<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup></li>
+</ul>
+<h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><p>刚发现 golang 语言原生支持复数运算，省了不少事。<br>以下以 $f(z)=z^2+1$ 多项式为例。</p>
+<figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> (</span><br><span class="line">    _NEWTON_E       = <span class="number">0.001</span></span><br><span class="line">    _NEWTON_MAP_MAX = <span class="number">3.0</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newton_f</span><span class="params">(z <span class="keyword">complex128</span>)</span> <span class="title">complex128</span></span> &#123;</span><br><span class="line">    f := z*z + <span class="number">1</span></span><br><span class="line">    <span class="keyword">return</span> f</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newton_df</span><span class="params">(z <span class="keyword">complex128</span>)</span> <span class="title">complex128</span></span> &#123;</span><br><span class="line">    df := <span class="number">2</span> * z</span><br><span class="line">    <span class="keyword">return</span> df</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newton_iter</span><span class="params">(z <span class="keyword">complex128</span>)</span> <span class="title">int</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="number">255</span>; i += <span class="number">9</span> &#123;</span><br><span class="line">        z1 := z - newton_f(z)/newton_df(z)</span><br><span class="line">        <span class="keyword">if</span> cmplx.Abs(z1-z) &lt; _NEWTON_E &#123;</span><br><span class="line">            <span class="keyword">return</span> i</span><br><span class="line">        &#125;</span><br><span class="line">        z = z1</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">255</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newton</span><span class="params">(img *image.RGBA, limit <span class="keyword">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; limit; i++ &#123;</span><br><span class="line">        zx := _NEWTON_MAP_MAX*<span class="keyword">float64</span>(i)/<span class="keyword">float64</span>(limit) - _NEWTON_MAP_MAX/<span class="number">2</span></span><br><span class="line">        <span class="keyword">for</span> j := <span class="number">0</span>; j &lt; limit; j++ &#123;</span><br><span class="line">            zy := _NEWTON_MAP_MAX*<span class="keyword">float64</span>(j)/<span class="keyword">float64</span>(limit) - _NEWTON_MAP_MAX/<span class="number">2</span></span><br><span class="line">            gray := <span class="keyword">uint8</span>(newton_iter(<span class="built_in">complex</span>(zx, zy)))</span><br><span class="line">            point(img, i, j, color.Gray&#123;gray&#125;)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><figure class="highlight go"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Test_newton</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">    <span class="keyword">const</span> max_len = <span class="number">500</span></span><br><span class="line">    img := image.NewRGBA(image.Rect(<span class="number">0</span>, <span class="number">0</span>, max_len, max_len))</span><br><span class="line">    newton(img, max_len)</span><br><span class="line">    f, _ := os.OpenFile(<span class="string">&quot;newton.png&quot;</span>, os.O_WRONLY|os.O_CREATE, <span class="number">0600</span>)</span><br><span class="line">    <span class="keyword">defer</span> f.Close()</span><br><span class="line">    png.Encode(f, img)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果：</p>
+<p><img src="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_x2+1.png" alt></p>
+<h2 id="分形欣赏"><a href="#分形欣赏" class="headerlink" title="分形欣赏"></a>分形欣赏</h2><p>$f(z)=z^3-1$<br><img src="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_x3-1.png" alt></p>
+<p>$f(z)=z^8+15z^4-16$<br><img src="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_x8+15x4-16.png" alt></p>
+<p>$f(z)=z^7+iz-1$<br><img src="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_x7+ix-1.png" alt></p>
+<h2 id="无心插柳"><a href="#无心插柳" class="headerlink" title="无心插柳"></a>无心插柳</h2><p>开始我不知道 golang 自带复数运算，所以自己写了个<del>错误的</del>，结果生成了意想不到的图片，也挺好看的。<br>颇有水墨之风 (≖‿ゝ≖)✧<br><img src="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_err_2.png" alt><br><img src="https://wishlily.github.io/images/article/code/2017/03/30/undefined/newton_err_5.png" alt></p>
+<div id="footnotes"><hr><div id="footnotelist"><ol style="list-style:none; padding-left: 0;"><li id="fn:1"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">1.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://www.whitman.edu/Documents/Academics/Mathematics/burton.pdf">NEWTON’S METHOD AND FRACTALS</a></span><a href="#fnref:1" rev="footnote"> ↩</a></li><li id="fn:2"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">2.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://www.douban.com/note/230496472/?type=like#sep">经典的分形算法：牛顿迭代</a></span><a href="#fnref:2" rev="footnote"> ↩</a></li></ol></div></div>
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Wishlily
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://wishlily.github.io/article/code/2017/03/30/undefined/" title="牛顿迭代分形">https://wishlily.github.io/article/code/2017/03/30/undefined/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/golang/" rel="tag"><i class="fa fa-tag"></i> golang</a>
+              <a href="/tags/draw/" rel="tag"><i class="fa fa-tag"></i> draw</a>
+              <a href="/tags/%E5%88%86%E5%BD%A2/" rel="tag"><i class="fa fa-tag"></i> 分形</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/code/2017/03/27/undefined/" rel="prev" title="Mandelbrot集">
+      <i class="fa fa-chevron-left"></i> Mandelbrot集
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/code/2017/04/01/undefined/" rel="next" title="IFS">
+      IFS <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%89%9B%E9%A1%BF%E8%BF%AD%E4%BB%A3"><span class="nav-number">1.</span> <span class="nav-text">牛顿迭代</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.</span> <span class="nav-text">实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95"><span class="nav-number">3.</span> <span class="nav-text">测试</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%BD%A2%E6%AC%A3%E8%B5%8F"><span class="nav-number">3.1.</span> <span class="nav-text">分形欣赏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%A0%E5%BF%83%E6%8F%92%E6%9F%B3"><span class="nav-number">3.2.</span> <span class="nav-text">无心插柳</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Wishlily"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Wishlily</p>
+  <div class="site-description" itemprop="description">幸福就是你此刻坚信着未来会越来越好</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Wishlily" title="Github → https:&#x2F;&#x2F;github.com&#x2F;Wishlily" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:emily.work@foxmail.com" title="Email → mailto:emily.work@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>Email</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Wishlily</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+  <div style="display: none;">
+    <script src="//s95.cnzz.com/z_stat.php?id=1261536881&web_id=1261536881"></script>
+  </div>
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+<script type="text/x-mathjax-config">
+
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$', '$'], ['\\(', '\\)'] ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+      equationNumbers: {
+        autoNumber: 'AMS'
+      }
+    }
+  });
+
+  MathJax.Hub.Register.StartupHook('TeX Jax Ready', function() {
+    MathJax.InputJax.TeX.prefilterHooks.Add(function(data) {
+      if (data.display) {
+        var next = data.script.nextSibling;
+        while (next && next.nodeName.toLowerCase() === '#text') {
+          next = next.nextSibling;
+        }
+        if (next && next.nodeName.toLowerCase() === 'br') {
+          next.parentNode.removeChild(next);
+        }
+      }
+    });
+  });
+
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i = 0; i < all.length; i += 1) {
+      element = document.getElementById(all[i].inputID + '-Frame').parentNode;
+      if (element.nodeName.toLowerCase() == 'li') {
+        element = element.parentNode;
+      }
+      element.classList.add('has-jax');
+    }
+  });
+</script>
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS-MML_HTMLorMML', () => {
+    MathJax.Hub.Typeset();
+  }, window.MathJax);
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: true,
+      notify: false,
+      appId: '5aCsCCkdt4qILYWhFaLSdqMf-MdYXbMMI',
+      appKey: 'X2n51rCfxIPxUYBU5MIgMaV2',
+      placeholder: "(｡･∀･)ﾉﾞ",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: true,
+      lang: 'zh-cn' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":-31,"vOffset":-12},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>

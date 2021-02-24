@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="_Nk6BnUFRZtnEJUeBDVnmuwf3WmBce1pg7RUjI55CSY">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://wishlily.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="为了提供与其他系统的兼容性，Linux 也支持 3 种 system V 的进程间通信机制：消息、信号量（semaphores）和共享内存，Linux 对这些机制的实施大同小异。我们把信号量、消息和共享内存统称 System V IPC 的对象，每一个对象都具有同样类型的接口，即系统调用。就像每个文件都有一个打开文件号一样，每个对象也都有唯一的识别号，进程可以通过系统调用传递的识别号来存取这些对象">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息队列">
+<meta property="og:url" content="https://wishlily.github.io/article/linux/2016/08/31/undefined/index.html">
+<meta property="og:site_name" content="Wishlily&#39;s blog">
+<meta property="og:description" content="为了提供与其他系统的兼容性，Linux 也支持 3 种 system V 的进程间通信机制：消息、信号量（semaphores）和共享内存，Linux 对这些机制的实施大同小异。我们把信号量、消息和共享内存统称 System V IPC 的对象，每一个对象都具有同样类型的接口，即系统调用。就像每个文件都有一个打开文件号一样，每个对象也都有唯一的识别号，进程可以通过系统调用传递的识别号来存取这些对象">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2016-08-31T09:01:19.000Z">
+<meta property="article:modified_time" content="2016-08-31T09:01:19.000Z">
+<meta property="article:author" content="Wishlily">
+<meta property="article:tag" content="IPC">
+<meta property="article:tag" content="SysV">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://wishlily.github.io/article/linux/2016/08/31/undefined/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>消息队列 | Wishlily's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Wishlily's blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Wishlily's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://wishlily.github.io/article/linux/2016/08/31/undefined/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Wishlily">
+      <meta itemprop="description" content="幸福就是你此刻坚信着未来会越来越好">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Wishlily's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          消息队列
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-08-31 17:01:19" itemprop="dateCreated datePublished" datetime="2016-08-31T17:01:19+08:00">2016-08-31</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index">
+                    <span itemprop="name">linux</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/article/linux/2016/08/31/undefined/" class="post-meta-item leancloud_visitors" data-flag-title="消息队列" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/article/linux/2016/08/31/undefined/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/article/linux/2016/08/31/undefined/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>为了提供与其他系统的兼容性，Linux 也支持 3 种 system V 的进程间通信机制：消息、信号量（semaphores）和共享内存，Linux 对这些机制的实施大同小异。我们把信号量、消息和共享内存统称 System V IPC 的对象，每一个对象都具有同样类型的接口，即系统调用。就像每个文件都有一个打开文件号一样，每个对象也都有唯一的识别号，进程可以通过系统调用传递的识别号来存取这些对象，与文件的存取一样，对这些对象的存取也要验证存取权限，System V IPC 可以通过系统调用对对象的创建者设置这些对象的存取权限。<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup><br>一个或多个进程可向消息队列写入消息，而一个或多个进程可从消息队列中读取消息，这种进程间通信机制通常使用在<strong>客户</strong>/<strong>服务器</strong>模型中，客户向服务器发送请求消息，服务器读取消息并执行相应请求。在许多微内核结构的操作系统中，内核和各组件之间的基本通信方式就是消息队列。<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup></p>
+<p><strong>注</strong>：<br><em>IPC: Inter-Process Communication（进程间通信）</em></p>
+<a id="more"></a>
+<h1 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h1><p>一般流程<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup>如下：</p>
+<ol>
+<li>通过 <code>ftok</code> 获得确定的 IPC Key</li>
+<li>使用 <code>msgget</code> 获得用于消息队列的特定 IPC ID</li>
+<li>使用 <code>msgsnd/msgrcv</code> 收发消息</li>
+<li>使用 <code>msgctl</code> 移除队列</li>
+</ol>
+<h1 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h1><p>常用函数<sup id="fnref:4"><a href="#fn:4" rel="footnote">4</a></sup>如下：</p>
+<h2 id="ftok"><a href="#ftok" class="headerlink" title="ftok"></a>ftok</h2><p>将路径文件名（存在且可访问）和一个 8bit 标识符转换成 System V IPC 键值。</p>
+<pre><code>#include &lt;sys/types.h&gt;
+#include &lt;sys/ipc.h&gt;
+
+key_t ftok(const char *pathname, int proj_id)</code></pre><ul>
+<li>pathname：文件名，必须存在</li>
+<li>proj_id：仅 8bit 有效，不可为零</li>
+<li>return：-1，发生错误，可通过 <code>errno</code> 查看；其他返回表示得到的键值</li>
+</ul>
+<p><strong>注</strong>：<br><em>只要 <code>pathname</code> 和 <code>proj_id</code> 一致则返回的键值就一直，因此两个进程可以通过此函数获得同一个键值。</em></p>
+<h2 id="msgget"><a href="#msgget" class="headerlink" title="msgget"></a>msgget</h2><p>建立一个消息队列。</p>
+<pre><code>#include &lt;sys/types.h&gt;
+#include &lt;sys/ipc.h&gt;
+#include &lt;sys/msg.h&gt;
+
+int msgget(key_t key, int msgflg)</code></pre><ul>
+<li>key：<code>ftok</code> 中返回的键值</li>
+<li>msgflg：使用 <code>|</code> 连接<ul>
+<li>权限：可使用 <code>0666</code> 等表示，也可使用 <code>open</code> 中 <code>mode</code> 宏</li>
+<li>IPC_CREAT：若不存在则创建</li>
+<li>IPC_EXCL：若存在则返回错误（和 <code>IPC_CREAT</code> 一起使用）</li>
+</ul>
+</li>
+<li>return：-1，发生错误，可通过 <code>errno</code> 查看；非负数，消息队列 ID</li>
+</ul>
+<p><strong>注</strong>：<br><em>系统中的消息队列可通过 <code>ipcs -q</code> 查看。</em></p>
+<h2 id="msgctl"><a href="#msgctl" class="headerlink" title="msgctl"></a>msgctl</h2><p>对消息队列的控制，查询、设置、删除。</p>
+<pre><code>#include &lt;sys/types.h&gt;
+#include &lt;sys/ipc.h&gt;
+#include &lt;sys/msg.h&gt;
+
+int msgctl(int msqid, int cmd, struct msqid_ds *buf)</code></pre><ul>
+<li>msqid：<code>msgget</code> 得到 ID</li>
+<li>cmd：常用如下<ul>
+<li>IPC_STAT：从内核获得消息队列的信息到 <code>buf</code> 中</li>
+<li>IPC_SET：通过 <code>buf</code> 修改内核中该消息的一些信息</li>
+<li>IPC_RMID：从内核移除该消息</li>
+</ul>
+</li>
+<li>buf：消息队列的相关信息</li>
+<li>return：-1，发生错误，可通过 <code>errno</code> 查看</li>
+</ul>
+<p><strong>注</strong>：<br><em>系统中已存在的消息也可通过 <code>ipcrm -q/Q</code> 来删除。</em></p>
+<h2 id="msgsnd-msgrcv"><a href="#msgsnd-msgrcv" class="headerlink" title="msgsnd/msgrcv"></a>msgsnd/msgrcv</h2><p>发送/接收消息到队列。</p>
+<pre><code>#include &lt;sys/types.h&gt;
+#include &lt;sys/ipc.h&gt;
+#include &lt;sys/msg.h&gt;
+
+int msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg)
+
+ssize_t msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg)</code></pre><ul>
+<li><p>msqid：<code>msgget</code> 得到 ID</p>
+</li>
+<li><p>msgp：形式如下</p>
+<pre><code>struct msgbuf &#123;
+    long mtype;       /* message type, must be &gt; 0 */
+    char mtext[1];    /* message data */
+&#125;;</code></pre><p>  <code>mtype</code> 必须包含，<code>data</code> 部分可以是自定义的数据结构（总长度不能超过 8192 字节）<sup id="fnref:5"><a href="#fn:5" rel="footnote">5</a></sup>。</p>
+</li>
+<li><p>msgsz：消息长度</p>
+</li>
+<li><p>msgflg：</p>
+<ul>
+<li>0：忽略</li>
+<li>IPC_NOWAIT：消息队列满则返回程序继续执行，否则阻塞</li>
+<li>0：忽略</li>
+<li>IPC_NOWAIT：如果消息队列为空则程序继续执行，否则阻塞</li>
+<li>MSG_EXCEPT：<code>msgtyp &gt; 0</code> 时作用，取不等于</li>
+<li>MSG_NOERROR：如果消息大于 <code>msgsz</code> 自动截断丢弃，否则不会被取出</li>
+</ul>
+</li>
+<li><p>msgtyp：</p>
+<ul>
+<li>等于 0：取出队列中最早的消息</li>
+<li>大于 0：取出消息中最早 <code>mtype</code> 等于此值的消息</li>
+<li>小于 0：取出消息中最早 <code>mtype</code> 小于等于此值绝对值的消息</li>
+</ul>
+</li>
+<li><p>return：-1，发生错误，可通过 <code>errno</code> 查看</p>
+</li>
+</ul>
+<h1 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h1><p>服务器/客户端例子<sup id="fnref:6"><a href="#fn:6" rel="footnote">6</a></sup></p>
+<h2 id="server"><a href="#server" class="headerlink" title="server"></a>server</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;errno.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/stat.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/msg.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;signal.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MSG_FILE <span class="meta-string">&quot;server.c&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BUFFER 255</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PERM S_IRUSR|S_IWUSR</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> msgid;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">clean_exit</span><span class="params">(<span class="keyword">int</span> sig)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">// 从内核中移除消息</span></span><br><span class="line">    <span class="keyword">if</span> (msgctl(msgid, IPC_RMID, <span class="literal">NULL</span>) == <span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>,<span class="string">&quot;Remove Message Error：%s\a\n&quot;</span>,strerror(errno));</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">exit</span>(sig);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">msgtype</span> &#123;</span></span><br><span class="line">    <span class="keyword">long</span> mtype;</span><br><span class="line">    <span class="keyword">char</span> buffer[BUFFER+<span class="number">1</span>];</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    signal(SIGINT, clean_exit);</span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">msgtype</span> <span class="title">msg</span>;</span></span><br><span class="line">    <span class="keyword">key_t</span> key;</span><br><span class="line">    <span class="comment">// 获得消息键</span></span><br><span class="line">    <span class="keyword">if</span>((key=ftok(MSG_FILE,<span class="string">&#x27;a&#x27;</span>))==<span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>,<span class="string">&quot;Creat Key Error：%s\a\n&quot;</span>,strerror(errno));</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 创建消息</span></span><br><span class="line">    <span class="keyword">if</span>((msgid=msgget(key,PERM|IPC_CREAT|IPC_EXCL))==<span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>,<span class="string">&quot;Creat Message Error：%s\a\n&quot;</span>,strerror(errno));</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span>(<span class="number">1</span>) &#123;</span><br><span class="line">        msgrcv(msgid,&amp;msg,<span class="keyword">sizeof</span>(struct msgtype),<span class="number">1</span>,<span class="number">0</span>);</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>,<span class="string">&quot;Server Receive：%s\n&quot;</span>,msg.buffer);</span><br><span class="line">        msg.mtype=<span class="number">2</span>;</span><br><span class="line">        msgsnd(msgid,&amp;msg,<span class="keyword">sizeof</span>(struct msgtype),<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="client"><a href="#client" class="headerlink" title="client"></a>client</h2><figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;errno.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/msg.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/stat.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MSG_FILE <span class="meta-string">&quot;../server/server.c&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> BUFFER 255</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PERM S_IRUSR|S_IWUSR</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">msgtype</span> &#123;</span></span><br><span class="line">    <span class="keyword">long</span> mtype;</span><br><span class="line">    <span class="keyword">char</span> buffer[BUFFER+<span class="number">1</span>];</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc,<span class="keyword">char</span> **argv)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">msgtype</span> <span class="title">msg</span>;</span></span><br><span class="line">    <span class="keyword">key_t</span> key;</span><br><span class="line">    <span class="keyword">int</span> msgid;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(argc!=<span class="number">2</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>,<span class="string">&quot;Usage：%s string\n\a&quot;</span>,argv[<span class="number">0</span>]);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>((key=ftok(MSG_FILE,<span class="string">&#x27;a&#x27;</span>))==<span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>,<span class="string">&quot;Creat Key Error：%s\a\n&quot;</span>,strerror(errno));</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>((msgid=msgget(key,PERM))==<span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>,<span class="string">&quot;Creat Message Error：%s\a\n&quot;</span>,strerror(errno));</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    msg.mtype=<span class="number">1</span>;</span><br><span class="line">    <span class="built_in">strncpy</span>(msg.buffer,argv[<span class="number">1</span>],BUFFER);</span><br><span class="line">    msgsnd(msgid,&amp;msg,<span class="keyword">sizeof</span>(struct msgtype),<span class="number">0</span>);</span><br><span class="line">    <span class="built_in">memset</span>(&amp;msg,<span class="string">&#x27;\0&#x27;</span>,<span class="keyword">sizeof</span>(struct msgtype));</span><br><span class="line">    msgrcv(msgid,&amp;msg,<span class="keyword">sizeof</span>(struct msgtype),<span class="number">2</span>,<span class="number">0</span>);</span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>,<span class="string">&quot;Client receive：%s\n&quot;</span>,msg.buffer);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<div id="footnotes"><hr><div id="footnotelist"><ol style="list-style:none; padding-left: 0;"><li id="fn:1"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">1.</span><span style="display: inline-block; vertical-align: top;">深入分析Linux内核源代码,7.3</span><a href="#fnref:1" rev="footnote"> ↩</a></li><li id="fn:2"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">2.</span><span style="display: inline-block; vertical-align: top;">深入分析Linux内核源代码,7.3.2</span><a href="#fnref:2" rev="footnote"> ↩</a></li><li id="fn:3"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">3.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/aix/library/au-ipc/">使用 UNIX System V IPC 机制共享应用程序数据</a></span><a href="#fnref:3" rev="footnote"> ↩</a></li><li id="fn:4"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">4.</span><span style="display: inline-block; vertical-align: top;">linux man 手册</span><a href="#fnref:4" rev="footnote"> ↩</a></li><li id="fn:5"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">5.</span><span style="display: inline-block; vertical-align: top;">深入分析Linux内核源代码,7.3.2,P284</span><a href="#fnref:5" rev="footnote"> ↩</a></li><li id="fn:6"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">6.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="http://lobert.iteye.com/blog/1743256">linux c学习笔记----消息队列（ftok,msgget，msgsnd，msgrcv，msgctl）</a></span><a href="#fnref:6" rev="footnote"> ↩</a></li></ol></div></div>
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Wishlily
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://wishlily.github.io/article/linux/2016/08/31/undefined/" title="消息队列">https://wishlily.github.io/article/linux/2016/08/31/undefined/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/IPC/" rel="tag"><i class="fa fa-tag"></i> IPC</a>
+              <a href="/tags/SysV/" rel="tag"><i class="fa fa-tag"></i> SysV</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/tools/2016/07/28/undefined/" rel="prev" title="Hexo Blog">
+      <i class="fa fa-chevron-left"></i> Hexo Blog
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/linux/2016/09/01/undefined/" rel="next" title="信号量">
+      信号量 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%87%BD%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ftok"><span class="nav-number">2.1.</span> <span class="nav-text">ftok</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#msgget"><span class="nav-number">2.2.</span> <span class="nav-text">msgget</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#msgctl"><span class="nav-number">2.3.</span> <span class="nav-text">msgctl</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#msgsnd-msgrcv"><span class="nav-number">2.4.</span> <span class="nav-text">msgsnd&#x2F;msgrcv</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B"><span class="nav-number">3.</span> <span class="nav-text">实例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#server"><span class="nav-number">3.1.</span> <span class="nav-text">server</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#client"><span class="nav-number">3.2.</span> <span class="nav-text">client</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Wishlily"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Wishlily</p>
+  <div class="site-description" itemprop="description">幸福就是你此刻坚信着未来会越来越好</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Wishlily" title="Github → https:&#x2F;&#x2F;github.com&#x2F;Wishlily" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:emily.work@foxmail.com" title="Email → mailto:emily.work@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>Email</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Wishlily</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+  <div style="display: none;">
+    <script src="//s95.cnzz.com/z_stat.php?id=1261536881&web_id=1261536881"></script>
+  </div>
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: true,
+      notify: false,
+      appId: '5aCsCCkdt4qILYWhFaLSdqMf-MdYXbMMI',
+      appKey: 'X2n51rCfxIPxUYBU5MIgMaV2',
+      placeholder: "(｡･∀･)ﾉﾞ",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: true,
+      lang: 'zh-cn' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":-31,"vOffset":-12},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>

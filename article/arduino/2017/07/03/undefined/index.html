@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="_Nk6BnUFRZtnEJUeBDVnmuwf3WmBce1pg7RUjI55CSY">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://wishlily.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Arduino 101 连接 PC 是通过一条方口 USB 数据线，并且可以通过这条数据线接收板子输出 debug 调试。那么这是如何实现的呢？这部分没有完全看透，只记录下目前收获（也许有误）。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Arduino 101 Serial 实现详解">
+<meta property="og:url" content="https://wishlily.github.io/article/arduino/2017/07/03/undefined/index.html">
+<meta property="og:site_name" content="Wishlily&#39;s blog">
+<meta property="og:description" content="Arduino 101 连接 PC 是通过一条方口 USB 数据线，并且可以通过这条数据线接收板子输出 debug 调试。那么这是如何实现的呢？这部分没有完全看透，只记录下目前收获（也许有误）。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://wishlily.github.io/images/article/arduino/2017/07/03/undefined/sram.png">
+<meta property="article:published_time" content="2017-07-03T07:03:26.000Z">
+<meta property="article:modified_time" content="2017-07-03T07:03:26.000Z">
+<meta property="article:author" content="Wishlily">
+<meta property="article:tag" content="arduino">
+<meta property="article:tag" content="quark">
+<meta property="article:tag" content="usb">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://wishlily.github.io/images/article/arduino/2017/07/03/undefined/sram.png">
+
+<link rel="canonical" href="https://wishlily.github.io/article/arduino/2017/07/03/undefined/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Arduino 101 Serial 实现详解 | Wishlily's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Wishlily's blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Wishlily's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://wishlily.github.io/article/arduino/2017/07/03/undefined/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Wishlily">
+      <meta itemprop="description" content="幸福就是你此刻坚信着未来会越来越好">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Wishlily's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Arduino 101 Serial 实现详解
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-07-03 15:03:26" itemprop="dateCreated datePublished" datetime="2017-07-03T15:03:26+08:00">2017-07-03</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/arduino/" itemprop="url" rel="index">
+                    <span itemprop="name">arduino</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/article/arduino/2017/07/03/undefined/" class="post-meta-item leancloud_visitors" data-flag-title="Arduino 101 Serial 实现详解" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/article/arduino/2017/07/03/undefined/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/article/arduino/2017/07/03/undefined/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Arduino 101 连接 PC 是通过一条方口 USB 数据线，并且可以通过这条数据线接收板子输出 debug 调试。<br>那么这是如何实现的呢？<br>这部分没有完全看透，只记录下目前收获（也许有误）。</p>
+<a id="more"></a>
+<h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>Arduino 中操作串口是通过 Serial<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup> 类。</p>
+<p><strong>初始化</strong>：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">setup</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    Serial.begin(<span class="number">9600</span>); <span class="comment">// 波特率设置为 9600</span></span><br><span class="line">    <span class="keyword">while</span>(!Serial);     <span class="comment">// 等待串口初始化完成</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>发送</strong>：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">loop</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    Serial.print(<span class="string">&quot;Hello World!\n&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>接收</strong>：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">serialEvent</span><span class="params">()</span></span>&#123; <span class="comment">// Called when data is available. Use Serial.read() to capture this data.</span></span><br><span class="line">    Serial.print(Serial.read());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h1><p>查看代码时发现了应用程序入口其实在 <code>main.cpp</code> 中，如下：</p>
+<blockquote>
+<p>C:\Users\XXX\AppData\Local\Arduino15\packages\Intel\hardware\arc32\2.0.2\cores\arduino\main.cpp</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">( <span class="keyword">void</span> )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    initVariant();</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(USBCON)</span></span><br><span class="line">    USBDevice.attach();</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">    setup();</span><br><span class="line">    <span class="keyword">for</span> (;;) <span class="comment">/* This infinite loop is intentional and requested by design */</span></span><br><span class="line">    &#123;</span><br><span class="line">        loop();</span><br><span class="line">        <span class="keyword">if</span> (serialEventRun) serialEventRun();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从中可以看到 <code>setup</code> <code>loop</code> 等函数，这就是通用的 Arduino 代码函数块，可以发现 <code>loop</code> 和 <code>serialEvent</code> 其实是顺序轮询方式，并不是真正中断。</p>
+<h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><p>Serial 部分的源码又在哪里呢？查找后发现对象初始化部分：</p>
+<blockquote>
+<p>C:\Users\XXX\AppData\Local\Arduino15\packages\Intel\hardware\arc32\2.0.2\variants\arduino_101\variant.cpp</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">uart_init_info info_cdc;</span><br><span class="line"><span class="function">CDCSerialClass <span class="title">Serial</span><span class="params">(&amp;info_cdc)</span></span>;</span><br><span class="line"></span><br><span class="line">RingBuffer rx_buffer_uart;</span><br><span class="line">RingBuffer tx_buffer_uart;</span><br><span class="line">uart_init_info info_uart;</span><br><span class="line"><span class="function">UARTClass <span class="title">Serial1</span><span class="params">(&amp;info_uart, &amp;rx_buffer_uart, &amp;tx_buffer_uart)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>原来 Serial 是全局变量，<code>CDCSerialClass</code> 的构造函数只是赋值，并没有特殊操作。<br>现在已知如下（和板子定义一致）：</p>
+<ul>
+<li>Serial 表示 USB<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup> 串口</li>
+<li>Serial1 表示 UART 串口</li>
+</ul>
+<p>接下来的操作在 <code>initVariant()</code> 中：</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">initVariant</span><span class="params">( <span class="keyword">void</span> )</span> </span>&#123;</span><br><span class="line">    <span class="comment">/* Initialise CDC-ACM shared buffers pointers, provided by LMT */</span></span><br><span class="line">    Serial.setSharedData(shared_data-&gt;cdc_acm_buffers);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>Serial.setSharedData</code> 只是赋值串口对象指针。</p>
+<blockquote>
+<p>C:\Users\XXX\AppData\Local\Arduino15\packages\Intel\hardware\arc32\2.0.2\cores\arduino\CDCSerialClass.cpp</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">CDCSerialClass::setSharedData</span><span class="params">(struct cdc_acm_shared_data *cdc_acm_shared_data)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">this</span>-&gt;_shared_data = cdc_acm_shared_data;</span><br><span class="line">    <span class="keyword">this</span>-&gt;_rx_buffer = cdc_acm_shared_data-&gt;rx_buffer;</span><br><span class="line">    <span class="keyword">this</span>-&gt;_tx_buffer = cdc_acm_shared_data-&gt;tx_buffer;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>shared_data</code> 是芯片中的 SRAM<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup> 地址为 0xA8000000，共 80K<sup id="fnref:4"><a href="#fn:4" rel="footnote">4</a></sup>。</p>
+<p><img src="https://wishlily.github.io/images/article/arduino/2017/07/03/undefined/sram.png" alt="sram"></p>
+<p>关于这段内存的作用，我推测是和内核部分进行交互，因为 <code>CDCSerialClass</code> 中并没有对寄存器的操作。<br>而内核部分也有同样的结构，并且会读取标志位以及设置标志位（内核部分没有详细查看）。<br>内核相关理解如下：</p>
+<ul>
+<li>代码入口在 <code>CODK\CODK-A\x86\projects\arduino101\quark\main.c</code></li>
+<li>驱动部分代码 <code>CODK\CODK-A\x86\bsp\src\drivers\usb</code>（<code>usb_driver_intf</code> 没有找到声明地方）</li>
+</ul>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>以 <code>Serial.print</code> 实现为例，使用该函数会向串口发送字符串。</p>
+<p><code>CDCSerialClass</code> 中并没有定义 <code>print</code> 的方法，此方法乃是继承 <code>class Print</code>，其所有继承关系如下：</p>
+<pre><code>CDCSerialClass-&gt;HardwareSerial-&gt;Stream-&gt;Print</code></pre><p>某个方法的实现如下：</p>
+<blockquote>
+<p>C:\Users\XXX\AppData\Local\Arduino15\packages\Intel\hardware\arc32\2.0.2\cores\arduino\Print.cpp</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">size_t</span> <span class="title">Print::print</span><span class="params">(<span class="keyword">char</span> c)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> write(c);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而 <code>write</code> 方法在 <code>CDCSerialClass</code> 类中被重写为向串口发送数据，如此便实现了 <code>Serial.print</code> 的功能。</p>
+<h2 id="疑问"><a href="#疑问" class="headerlink" title="疑问"></a>疑问</h2><p><code>CDCSerialClass</code> 中波特率设置似乎没有作用。</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">CDCSerialClass::init</span><span class="params">(<span class="keyword">const</span> <span class="keyword">uint32_t</span> dwBaudRate, <span class="keyword">const</span> <span class="keyword">uint8_t</span> modeReg)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/* Set a per-byte write delay approximately equal to the time it would</span></span><br><span class="line"><span class="comment">     * take to clock out a byte on a standard UART at this baud rate */</span></span><br><span class="line">    _writeDelayUsec = <span class="number">8000000</span> / dwBaudRate;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Make sure both ring buffers are initialized back to empty.</span></span><br><span class="line"><span class="comment">     * Empty the Rx buffer but don&#x27;t touch Tx buffer: it is drained by the</span></span><br><span class="line"><span class="comment">     * LMT one way or another */</span></span><br><span class="line">    _rx_buffer-&gt;tail = _rx_buffer-&gt;head;</span><br><span class="line"></span><br><span class="line">    _shared_data-&gt;device_open = <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以上为初始化部分，从中可以看到 <code>dwBaudRate</code> 只计算了 <code>_writeDelayUsec</code>，没有传递到 <code>_shared_data</code> 中。<br>查找代码又会发现 <code>_writeDelayUsec</code> 没有在其他地方被调用过，那么该波特率还有作用吗？<br>为此我尝试在电脑上随便修改波特率，并和板子通信，发现波特率不匹配也可以通信，不知道是不是因为该口是 USB 虚拟串口的原因？<br>相对应的 <code>Serial1 UARTClass</code> 的 <code>init</code> 中是包含波特率设置代码的。</p>
+<h1 id="修改"><a href="#修改" class="headerlink" title="修改"></a>修改</h1><p>添加 <code>printf</code> 方法<sup id="fnref:5"><a href="#fn:5" rel="footnote">5</a></sup>。<br>我使用的是添加 <code>Print::printf</code>，修改后可在 <code>Serial</code> 中使用 <code>printf</code> 方法了。</p>
+<blockquote>
+<p>C:\Users\XXX\AppData\Local\Arduino15\packages\Intel\hardware\arc32\2.0.2\cores\arduino\Print.cpp</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdarg.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PRINTF_BUF 80</span></span><br><span class="line"><span class="function"><span class="keyword">size_t</span> <span class="title">Print::printf</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span> *format, ...)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> buf[PRINTF_BUF];</span><br><span class="line">    va_list ap;</span><br><span class="line">    va_start(ap, format);</span><br><span class="line">    vsnprintf(buf, <span class="keyword">sizeof</span>(buf), format, ap);</span><br><span class="line">    <span class="keyword">for</span>(<span class="keyword">char</span> *p = &amp;buf[<span class="number">0</span>]; *p; p++) &#123;</span><br><span class="line">        <span class="keyword">if</span>(*p == <span class="string">&#x27;\n&#x27;</span>)</span><br><span class="line">            write(<span class="string">&#x27;\r&#x27;</span>);</span><br><span class="line">        write(*p);</span><br><span class="line">    &#125;</span><br><span class="line">    va_end(ap);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<div id="footnotes"><hr><div id="footnotelist"><ol style="list-style:none; padding-left: 0;"><li id="fn:1"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">1.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://www.arduino.cc/en/reference/serial">Serial func</a></span><a href="#fnref:1" rev="footnote"> ↩</a></li><li id="fn:2"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">2.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/USB">USB CDC is a composite Universal Serial Bus device class</a></span><a href="#fnref:2" rev="footnote"> ↩</a></li><li id="fn:3"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">3.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://www.arduino.cc/en/Tutorial/Memory">static random access memory</a></span><a href="#fnref:3" rev="footnote"> ↩</a></li><li id="fn:4"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">4.</span><span style="display: inline-block; vertical-align: top;">Intel® Quark™ SE Microcontroller C1000 Datasheet, Table 24, Mapping Address Spaces</span><a href="#fnref:4" rev="footnote"> ↩</a></li><li id="fn:5"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">5.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://playground.arduino.cc/Main/Printf">Arduino printf</a></span><a href="#fnref:5" rev="footnote"> ↩</a></li></ol></div></div>
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Wishlily
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://wishlily.github.io/article/arduino/2017/07/03/undefined/" title="Arduino 101 Serial 实现详解">https://wishlily.github.io/article/arduino/2017/07/03/undefined/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/arduino/" rel="tag"><i class="fa fa-tag"></i> arduino</a>
+              <a href="/tags/quark/" rel="tag"><i class="fa fa-tag"></i> quark</a>
+              <a href="/tags/usb/" rel="tag"><i class="fa fa-tag"></i> usb</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/tools/2017/06/15/undefined/" rel="prev" title="GCC 常用">
+      <i class="fa fa-chevron-left"></i> GCC 常用
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/tools/2017/09/07/undefined/" rel="next" title="Markdown 增强">
+      Markdown 增强 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">2.1.</span> <span class="nav-text">初始化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96"><span class="nav-number">2.2.</span> <span class="nav-text">其他</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%96%91%E9%97%AE"><span class="nav-number">2.3.</span> <span class="nav-text">疑问</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BF%AE%E6%94%B9"><span class="nav-number">3.</span> <span class="nav-text">修改</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Wishlily"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Wishlily</p>
+  <div class="site-description" itemprop="description">幸福就是你此刻坚信着未来会越来越好</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Wishlily" title="Github → https:&#x2F;&#x2F;github.com&#x2F;Wishlily" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:emily.work@foxmail.com" title="Email → mailto:emily.work@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>Email</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Wishlily</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+  <div style="display: none;">
+    <script src="//s95.cnzz.com/z_stat.php?id=1261536881&web_id=1261536881"></script>
+  </div>
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: true,
+      notify: false,
+      appId: '5aCsCCkdt4qILYWhFaLSdqMf-MdYXbMMI',
+      appKey: 'X2n51rCfxIPxUYBU5MIgMaV2',
+      placeholder: "(｡･∀･)ﾉﾞ",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: true,
+      lang: 'zh-cn' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":-31,"vOffset":-12},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>

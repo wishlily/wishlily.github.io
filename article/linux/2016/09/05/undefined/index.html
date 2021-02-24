@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="_Nk6BnUFRZtnEJUeBDVnmuwf3WmBce1pg7RUjI55CSY">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://wishlily.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="共享内存可以被描述成内存一个区域（段）的映射，这个区域可以被更多的进程所共享。1该方式应该是 SysV IPC 中最快速度形式，减少了不必要的复制拷贝操作，但是 Linux 对共享内存不提供同步操作，一般需要其他方式进行辅助，如信号量。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="共享内存">
+<meta property="og:url" content="https://wishlily.github.io/article/linux/2016/09/05/undefined/index.html">
+<meta property="og:site_name" content="Wishlily&#39;s blog">
+<meta property="og:description" content="共享内存可以被描述成内存一个区域（段）的映射，这个区域可以被更多的进程所共享。1该方式应该是 SysV IPC 中最快速度形式，减少了不必要的复制拷贝操作，但是 Linux 对共享内存不提供同步操作，一般需要其他方式进行辅助，如信号量。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2016-09-05T03:20:11.000Z">
+<meta property="article:modified_time" content="2016-09-05T03:20:11.000Z">
+<meta property="article:author" content="Wishlily">
+<meta property="article:tag" content="IPC">
+<meta property="article:tag" content="SysV">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://wishlily.github.io/article/linux/2016/09/05/undefined/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>共享内存 | Wishlily's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Wishlily's blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Wishlily's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://wishlily.github.io/article/linux/2016/09/05/undefined/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Wishlily">
+      <meta itemprop="description" content="幸福就是你此刻坚信着未来会越来越好">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Wishlily's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          共享内存
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-09-05 11:20:11" itemprop="dateCreated datePublished" datetime="2016-09-05T11:20:11+08:00">2016-09-05</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index">
+                    <span itemprop="name">linux</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/article/linux/2016/09/05/undefined/" class="post-meta-item leancloud_visitors" data-flag-title="共享内存" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/article/linux/2016/09/05/undefined/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/article/linux/2016/09/05/undefined/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>共享内存可以被描述成内存一个区域（段）的映射，这个区域可以被更多的进程所共享。<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup><br>该方式应该是 SysV IPC 中最快速度形式，减少了不必要的复制拷贝操作，但是 Linux 对共享内存不提供同步操作，一般需要其他方式进行辅助，如信号量。</p>
+<a id="more"></a>
+<h1 id="流程"><a href="#流程" class="headerlink" title="流程"></a>流程</h1><p>一般流程<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>如下：</p>
+<ol>
+<li>通过 <code>ftok</code> 获得确定的 IPC Key</li>
+<li>使用 <code>shmget</code> 获得用于共享内存的特定 IPC ID</li>
+<li>使用 <code>shmat/shmdt</code> 操作共享内存</li>
+<li>使用 <code>shmctl</code> 移除共享内存</li>
+</ol>
+<h1 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h1><h2 id="shmget"><a href="#shmget" class="headerlink" title="shmget"></a>shmget</h2><p>建立/获得共享内存</p>
+<pre><code>#include &lt;sys/ipc.h&gt;
+#include &lt;sys/shm.h&gt;
+
+int shmget(key_t key, size_t size, int shmflg)</code></pre><ul>
+<li>key：键值，一般使用 <code>ftok</code> 获得</li>
+<li>size：字节单位，申请的共享内存大小</li>
+<li>shmflg：使用 <code>|</code> 连接<ul>
+<li>权限：可使用 <code>0666</code> 等表示，也可使用 <code>open</code> 中 <code>mode</code> 宏</li>
+<li>IPC_CREAT：若不存在则创建</li>
+<li>IPC_EXCL：若存在则返回错误（和 <code>IPC_CREAT</code> 一起使用）</li>
+</ul>
+</li>
+<li>return：-1，错误；非负数，共享内存 ID</li>
+</ul>
+<p><strong>注</strong>：</p>
+<ol>
+<li><em>查看系统共享内存可通过 <code>ipcs -m</code> 命令</em></li>
+<li><em>查看系统对共享内存限制通过 <code>ipcs -lm</code> 命令</em></li>
+</ol>
+<h2 id="shmctl"><a href="#shmctl" class="headerlink" title="shmctl"></a>shmctl</h2><p>控制共享内存，设置、获取、删除。</p>
+<pre><code>#include &lt;sys/ipc.h&gt;
+#include &lt;sys/shm.h&gt;
+
+int shmctl(int shmid, int cmd, struct shmid_ds *buf)</code></pre><ul>
+<li>shmid：<code>shmget</code> 获得 ID</li>
+<li>cmd：同信号量类似，以下列出已尝试部分<ul>
+<li>IPC_RMID：命令实际上不从内核删除一个段，而是仅仅把这个段标记为删除，实际的删除发生在最后一个进程离开这个共享段时。<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup></li>
+</ul>
+</li>
+<li>buf：</li>
+<li>return：-1，错误</li>
+</ul>
+<p><strong>注</strong>：<br><em>删除系统中存在的共享内存可使用 <code>ipcrm -m/M</code></em></p>
+<h2 id="shmat-shmdt"><a href="#shmat-shmdt" class="headerlink" title="shmat/shmdt"></a>shmat/shmdt</h2><p>连接共享内存。</p>
+<pre><code>#include &lt;sys/types.h&gt;
+#include &lt;sys/shm.h&gt;
+
+void *shmat(int shmid, const void *shmaddr, int shmflg)</code></pre><ul>
+<li>shmid：<code>shmget</code> 获得 ID</li>
+<li>shmaddr：NULL，表示由系统分配</li>
+<li>shmflg：标志<ul>
+<li>SHM_RDONLY：只读模式</li>
+</ul>
+</li>
+<li>return：-1，错误，共享内存起始地址</li>
+</ul>
+<p>断开共享内存。</p>
+<pre><code>int shmdt(const void *shmaddr)</code></pre><ul>
+<li>shmaddr：共享内存其实地址</li>
+<li>return：-1，错误</li>
+</ul>
+<h1 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h1><p>所有例子源码文件在 <a target="_blank" rel="noopener" href="https://github.com/wishlily/demo"><code>demo/c/ipc/shm/</code></a> 中。</p>
+<h2 id="未同步"><a href="#未同步" class="headerlink" title="未同步"></a>未同步</h2><p>没有添加其他辅助手段多进程读写共享内存，会发生读取<strong>错误</strong>的可能。<br>以下例子共享内存使用字符串，因为对字符串的复制拷贝，一般不会是原子操作。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/shm.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;errno.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHM_TEST_DATALEN 256</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">shm_test_st</span> &#123;</span></span><br><span class="line">    <span class="keyword">char</span> dat[SHM_TEST_DATALEN];</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> <span class="keyword">char</span> g_test_data[][SHM_TEST_DATALEN] = &#123;</span><br><span class="line">    &#123;<span class="string">&quot;Nothing gold can stay&quot;</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Nature&#x27;s first green is gold&quot;</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Her hardest hue to hold&quot;</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Her early leaf&#x27;s a flower&quot;</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;But only so an hour&quot;</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Then leaf subsides leaf&quot;</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;So Eden sank to grief&quot;</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;So down gose down to day&quot;</span>&#125;,</span><br><span class="line">    &#123;<span class="string">&quot;Ending&quot;</span>&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">shm_write</span><span class="params">(struct shm_test_st *pdata)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> num = <span class="keyword">sizeof</span>(g_test_data) / <span class="keyword">sizeof</span>(g_test_data[<span class="number">0</span>]);</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; num; i++) &#123;</span><br><span class="line">        <span class="built_in">strcpy</span>(pdata-&gt;dat, g_test_data[i]);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Write - %s\n&quot;</span>, g_test_data[i]);</span><br><span class="line">        sleep(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Write Over!\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">shm_read</span><span class="params">(struct shm_test_st *pdata)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    sleep(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">char</span> tmp[SHM_TEST_DATALEN];</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="built_in">strcpy</span>(tmp, pdata-&gt;dat);</span><br><span class="line">        <span class="keyword">int</span> num = <span class="keyword">sizeof</span>(g_test_data) / <span class="keyword">sizeof</span>(g_test_data[<span class="number">0</span>]);</span><br><span class="line">        <span class="keyword">int</span> ret = <span class="number">-1</span>;</span><br><span class="line">        <span class="keyword">int</span> i;</span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; num; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">strcmp</span>(tmp, g_test_data[i]) == <span class="number">0</span>) &#123;</span><br><span class="line">                ret = <span class="number">0</span>;</span><br><span class="line">                <span class="keyword">if</span> (i == (num - <span class="number">1</span>)) &#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;Read Over\n&quot;</span>);</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;Read Error - %s\n&quot;</span>, tmp);</span><br><span class="line">        &#125;</span><br><span class="line">        sleep(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span> <span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> **argv)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (argc &lt; <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;demo w/r\n&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">key_t</span> ipckey = ftok(<span class="string">&quot;/tmp/test&quot;</span>, <span class="string">&#x27;:&#x27;</span>);</span><br><span class="line">    <span class="keyword">int</span> shmid = shmget(ipckey, <span class="keyword">sizeof</span>(struct shm_test_st), <span class="number">0600</span> | IPC_CREAT);</span><br><span class="line">    <span class="keyword">if</span> (shmid &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Error - %s\n&quot;</span>, strerror(errno));</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">void</span> *addr = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">if</span> (argv[<span class="number">1</span>][<span class="number">0</span>] == <span class="string">&#x27;w&#x27;</span>) &#123;</span><br><span class="line">        addr = shmat(shmid, <span class="literal">NULL</span>, <span class="number">0</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123; <span class="comment">// r</span></span><br><span class="line">        addr = shmat(shmid, <span class="literal">NULL</span>, SHM_RDONLY);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (addr == (<span class="keyword">void</span> *)<span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Addr Error - %s\n&quot;</span>, strerror(errno));</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">shm_test_st</span> *<span class="title">p_shared</span> =</span> (struct shm_test_st *)addr;</span><br><span class="line">    <span class="keyword">int</span> ret;</span><br><span class="line">    <span class="keyword">if</span> (argv[<span class="number">1</span>][<span class="number">0</span>] == <span class="string">&#x27;w&#x27;</span>) &#123;</span><br><span class="line">        ret = shm_write(p_shared);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123; <span class="comment">// r</span></span><br><span class="line">        ret = shm_read(p_shared);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (shmctl(shmid, IPC_RMID, <span class="literal">NULL</span>) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Delete Error - %s\n&quot;</span>, strerror(errno));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行程序：</p>
+<pre><code>./demo w &amp; ./demo r &amp; ./demo r &amp; ./demo r &amp;</code></pre><p>执行结果：可能产生读取信息错误，如下</p>
+<pre><code>Write - Nothing gold can stay
+Write - Nature&apos;s first green is gold
+Write - Her hardest hue to hold
+Read Error - Nature&apos;s first gto hold
+Write - Her early leaf&apos;s a flower
+Write - But only so an hour
+Write - Then leaf subsides leaf
+Read Error - But only so an hes llower
+Write - So Eden sank to grief
+Write - So down gose down to day
+Write - Ending
+Read Over
+Read Over
+Read Over
+Write Over!</code></pre><h2 id="写优先锁"><a href="#写优先锁" class="headerlink" title="写优先锁"></a>写优先锁</h2><p>上个例子中出现问题，很多是在写的过程中读取数据造成错误，查看网上一篇文章「<a target="_blank" rel="noopener" href="http://os.51cto.com/art/201004/195518.htm">知识讲解Unix操作系统共享内存</a>」中说：</p>
+<blockquote>
+<p>常规的方法是设一个信号量，Unix 操作系统将访问共享内存的程序作为临界区来处理。程序进入时用 <code>p()</code> 操作取得锁，退出时用 <code>v()</code> 操作释放锁。<br>只有 Server 进行 <code>p()</code>、<code>v()</code> 操作，信号量初始值设为 0，<code>p()</code> 操作将它加一，<code>v()</code> 操作将它减一；Client 读共享内存之前要先等待信号量的值为 0，这样 Server 的 <code>p()</code> 操作总是成功，而 Server 的 <code>p()</code> 操作后，尚未进入临界区的 Client 只能等到 Server 执行 <code>v()</code> 操作后才能读。这样 Server 比 Client 优先，Client 之间不互斥。<sup id="fnref:4"><a href="#fn:4" rel="footnote">4</a></sup></p>
+</blockquote>
+<p>当然以上方法其实只适合读很快速（原子）类型，本例应该还会有发生错误的可能，下面验证一下。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">shm_write</span><span class="params">(struct shm_test_st *pdata, <span class="keyword">int</span> semid)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sembuf</span> <span class="title">sem</span>[1];</span></span><br><span class="line">    sem[<span class="number">0</span>].sem_num = <span class="number">0</span>;</span><br><span class="line">    sem[<span class="number">0</span>].sem_flg = SEM_UNDO;</span><br><span class="line">    <span class="keyword">int</span> num = <span class="keyword">sizeof</span>(g_test_data) / <span class="keyword">sizeof</span>(g_test_data[<span class="number">0</span>]);</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; num; i++) &#123;</span><br><span class="line">        sem[<span class="number">0</span>].sem_op = <span class="number">1</span>;</span><br><span class="line">        semop(semid, sem, <span class="number">1</span>); <span class="comment">// p()</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Write - %s\n&quot;</span>, g_test_data[i]);</span><br><span class="line">        <span class="built_in">strcpy</span>(pdata-&gt;dat, g_test_data[i]);</span><br><span class="line">        sem[<span class="number">0</span>].sem_op = <span class="number">-1</span>;</span><br><span class="line">        semop(semid, sem, <span class="number">1</span>); <span class="comment">// v()</span></span><br><span class="line">        sleep(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Write Over!\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">shm_read</span><span class="params">(struct shm_test_st *pdata, <span class="keyword">int</span> semid)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sembuf</span> <span class="title">sem</span>[1];</span></span><br><span class="line">    sem[<span class="number">0</span>].sem_num = <span class="number">0</span>;</span><br><span class="line">    sem[<span class="number">0</span>].sem_flg = SEM_UNDO;</span><br><span class="line">    sleep(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">char</span> tmp[SHM_TEST_DATALEN];</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        sem[<span class="number">0</span>].sem_op = <span class="number">0</span>;</span><br><span class="line">        semop(semid, sem, <span class="number">1</span>); <span class="comment">// wait()</span></span><br><span class="line">        <span class="built_in">strcpy</span>(tmp, pdata-&gt;dat);</span><br><span class="line">        <span class="keyword">int</span> num = <span class="keyword">sizeof</span>(g_test_data) / <span class="keyword">sizeof</span>(g_test_data[<span class="number">0</span>]);</span><br><span class="line">        <span class="keyword">int</span> ret = <span class="number">-1</span>;</span><br><span class="line">        <span class="keyword">int</span> i;</span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; num; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">strcmp</span>(tmp, g_test_data[i]) == <span class="number">0</span>) &#123;</span><br><span class="line">                ret = <span class="number">0</span>;</span><br><span class="line">                <span class="keyword">if</span> (i == (num - <span class="number">1</span>)) &#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;Read Over\n&quot;</span>);</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;Read Error - %s\n&quot;</span>, tmp);</span><br><span class="line">        &#125;</span><br><span class="line">        sleep(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行程序：</p>
+<pre><code>./demo w &amp; ./demo r &amp; ./demo r &amp; ./demo r &amp;</code></pre><p>执行结果：确实还是会产生错误</p>
+<pre><code>Write - Nothing gold can stay
+Write - Nature&apos;s first green is gold
+Read Error - Nothing gold canreen i
+Write - Her hardest hue to hold
+Write - Her early leaf&apos;s a flower
+Write - But only so an hour
+Write - Then leaf subsides leaf
+Write - So Eden sank to grief
+Write - So down gose down to day
+Write - Ending
+Read Over
+Read Over
+Read Over
+Write Over!</code></pre><h2 id="互斥锁"><a href="#互斥锁" class="headerlink" title="互斥锁"></a>互斥锁</h2><p>看来上面的方法也不行，那么只有读写全部加锁才能保证不出错了，不过这样的缺点就是所有的读也变成了串行，降低了效率。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">shm_write</span><span class="params">(struct shm_test_st *pdata, <span class="keyword">int</span> semid)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sembuf</span> <span class="title">sem</span>[2];</span></span><br><span class="line">    sem[<span class="number">0</span>].sem_num = <span class="number">0</span>;</span><br><span class="line">    sem[<span class="number">1</span>].sem_num = <span class="number">0</span>;</span><br><span class="line">    sem[<span class="number">0</span>].sem_flg = SEM_UNDO;</span><br><span class="line">    sem[<span class="number">1</span>].sem_flg = SEM_UNDO;</span><br><span class="line">    <span class="keyword">int</span> num = <span class="keyword">sizeof</span>(g_test_data) / <span class="keyword">sizeof</span>(g_test_data[<span class="number">0</span>]);</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; num; i++) &#123;</span><br><span class="line">        sem[<span class="number">0</span>].sem_op = <span class="number">0</span>;</span><br><span class="line">        sem[<span class="number">1</span>].sem_op = <span class="number">1</span>;</span><br><span class="line">        semop(semid, sem, <span class="number">2</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Write - %s\n&quot;</span>, g_test_data[i]);</span><br><span class="line">        <span class="built_in">strcpy</span>(pdata-&gt;dat, g_test_data[i]);</span><br><span class="line">        sem[<span class="number">0</span>].sem_op = <span class="number">-1</span>;</span><br><span class="line">        semop(semid, sem, <span class="number">1</span>);</span><br><span class="line">        sleep(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Write Over!\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">shm_read</span><span class="params">(struct shm_test_st *pdata, <span class="keyword">int</span> semid)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sembuf</span> <span class="title">sem</span>[2];</span></span><br><span class="line">    sem[<span class="number">0</span>].sem_num = <span class="number">0</span>;</span><br><span class="line">    sem[<span class="number">1</span>].sem_num = <span class="number">0</span>;</span><br><span class="line">    sem[<span class="number">0</span>].sem_flg = SEM_UNDO;</span><br><span class="line">    sem[<span class="number">1</span>].sem_flg = SEM_UNDO;</span><br><span class="line">    sleep(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">char</span> tmp[SHM_TEST_DATALEN];</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        sem[<span class="number">0</span>].sem_op = <span class="number">0</span>;</span><br><span class="line">        sem[<span class="number">1</span>].sem_op = <span class="number">1</span>;</span><br><span class="line">        semop(semid, sem, <span class="number">2</span>);</span><br><span class="line">        <span class="built_in">strcpy</span>(tmp, pdata-&gt;dat);</span><br><span class="line">        sem[<span class="number">0</span>].sem_op = <span class="number">-1</span>;</span><br><span class="line">        semop(semid, sem, <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">int</span> num = <span class="keyword">sizeof</span>(g_test_data) / <span class="keyword">sizeof</span>(g_test_data[<span class="number">0</span>]);</span><br><span class="line">        <span class="keyword">int</span> ret = <span class="number">-1</span>;</span><br><span class="line">        <span class="keyword">int</span> i;</span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; num; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">strcmp</span>(tmp, g_test_data[i]) == <span class="number">0</span>) &#123;</span><br><span class="line">                ret = <span class="number">0</span>;</span><br><span class="line">                <span class="keyword">if</span> (i == (num - <span class="number">1</span>)) &#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;Read Over\n&quot;</span>);</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;Read Error - %s\n&quot;</span>, tmp);</span><br><span class="line">        &#125;</span><br><span class="line">        sleep(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果不会出现读错的情况了。</p>
+<h2 id="读写锁"><a href="#读写锁" class="headerlink" title="读写锁"></a>读写锁</h2><p>通过「<a target="_blank" rel="noopener" href="http://blog.csdn.net/anonymalias/article/details/9174595">Linux线程同步之读写锁（rwlock）</a>」文章，发现信号量可以实现读写锁。</p>
+<blockquote>
+<ul>
+<li>只要没有写模式下的加锁，任意线程都可以进行读模式下的加锁；</li>
+</ul>
+</blockquote>
+<ul>
+<li>只有读写锁处于不加锁状态时，才能进行写模式下的加锁；<sup id="fnref:5"><a href="#fn:5" rel="footnote">5</a></sup></li>
+</ul>
+<p>将之前单锁变成双锁即可，一个表示写，一个表示读。<br>此方式适合少写多读的场景。</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">shm_write</span><span class="params">(struct shm_test_st *pdata, <span class="keyword">int</span> semid)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sembuf</span> <span class="title">sem</span>[3];</span></span><br><span class="line">    sem[<span class="number">0</span>].sem_num = <span class="number">0</span>; <span class="comment">// w</span></span><br><span class="line">    sem[<span class="number">1</span>].sem_num = <span class="number">1</span>; <span class="comment">// r</span></span><br><span class="line">    sem[<span class="number">2</span>].sem_num = <span class="number">0</span>; <span class="comment">// w</span></span><br><span class="line">    sem[<span class="number">0</span>].sem_flg = SEM_UNDO;</span><br><span class="line">    sem[<span class="number">1</span>].sem_flg = SEM_UNDO;</span><br><span class="line">    sem[<span class="number">2</span>].sem_flg = SEM_UNDO;</span><br><span class="line">    <span class="keyword">int</span> num = <span class="keyword">sizeof</span>(g_test_data) / <span class="keyword">sizeof</span>(g_test_data[<span class="number">0</span>]);</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; num; i++) &#123;</span><br><span class="line">        sem[<span class="number">0</span>].sem_op = <span class="number">0</span>; <span class="comment">// wait write free</span></span><br><span class="line">        sem[<span class="number">1</span>].sem_op = <span class="number">0</span>; <span class="comment">// wait read free</span></span><br><span class="line">        sem[<span class="number">2</span>].sem_op = <span class="number">1</span>; <span class="comment">// write +1 -&gt; going</span></span><br><span class="line">        semop(semid, sem, <span class="number">3</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Write - %s\n&quot;</span>, g_test_data[i]);</span><br><span class="line">        <span class="built_in">strcpy</span>(pdata-&gt;dat, g_test_data[i]);</span><br><span class="line">        sem[<span class="number">0</span>].sem_op = <span class="number">-1</span>;</span><br><span class="line">        semop(semid, sem, <span class="number">1</span>); <span class="comment">// write -1 -&gt; over</span></span><br><span class="line">        sleep(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Write Over!\n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">shm_read</span><span class="params">(struct shm_test_st *pdata, <span class="keyword">int</span> semid)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sembuf</span> <span class="title">sem</span>[2];</span></span><br><span class="line">    sem[<span class="number">0</span>].sem_num = <span class="number">0</span>; <span class="comment">// w</span></span><br><span class="line">    sem[<span class="number">1</span>].sem_num = <span class="number">1</span>; <span class="comment">// r</span></span><br><span class="line">    sem[<span class="number">0</span>].sem_flg = SEM_UNDO;</span><br><span class="line">    sem[<span class="number">1</span>].sem_flg = SEM_UNDO;</span><br><span class="line">    sleep(<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">char</span> tmp[SHM_TEST_DATALEN];</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        sem[<span class="number">0</span>].sem_op = <span class="number">0</span>; <span class="comment">// write is free</span></span><br><span class="line">        sem[<span class="number">1</span>].sem_op = <span class="number">1</span>; <span class="comment">// read +1 -&gt; going</span></span><br><span class="line">        semop(semid, sem, <span class="number">2</span>);</span><br><span class="line">        <span class="built_in">strcpy</span>(tmp, pdata-&gt;dat);</span><br><span class="line">        sem[<span class="number">0</span>].sem_num = <span class="number">1</span>; <span class="comment">// r</span></span><br><span class="line">        sem[<span class="number">0</span>].sem_op = <span class="number">-1</span>; <span class="comment">// read -1 -&gt; over</span></span><br><span class="line">        semop(semid, sem, <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">int</span> num = <span class="keyword">sizeof</span>(g_test_data) / <span class="keyword">sizeof</span>(g_test_data[<span class="number">0</span>]);</span><br><span class="line">        <span class="keyword">int</span> ret = <span class="number">-1</span>;</span><br><span class="line">        <span class="keyword">int</span> i;</span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; num; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">strcmp</span>(tmp, g_test_data[i]) == <span class="number">0</span>) &#123;</span><br><span class="line">                ret = <span class="number">0</span>;</span><br><span class="line">                <span class="keyword">if</span> (i == (num - <span class="number">1</span>)) &#123;</span><br><span class="line">                    <span class="built_in">printf</span>(<span class="string">&quot;Read Over\n&quot;</span>);</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;Read Error - %s\n&quot;</span>, tmp);</span><br><span class="line">        &#125;</span><br><span class="line">        sleep(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<div id="footnotes"><hr><div id="footnotelist"><ol style="list-style:none; padding-left: 0;"><li id="fn:1"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">1.</span><span style="display: inline-block; vertical-align: top;">深入分析Linux内核源代码,7.3.3</span><a href="#fnref:1" rev="footnote"> ↩</a></li><li id="fn:2"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">2.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/aix/library/au-ipc/">使用 UNIX System V IPC 机制共享应用程序数据</a></span><a href="#fnref:2" rev="footnote"> ↩</a></li><li id="fn:3"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">3.</span><span style="display: inline-block; vertical-align: top;">深入分析Linux内核源代码,7.3.3,P288</span><a href="#fnref:3" rev="footnote"> ↩</a></li><li id="fn:4"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">4.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="http://os.51cto.com/art/201004/195518.htm">知识讲解Unix操作系统共享内存</a></span><a href="#fnref:4" rev="footnote"> ↩</a></li><li id="fn:5"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">5.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="http://blog.csdn.net/anonymalias/article/details/9174595">Linux线程同步之读写锁（rwlock）</a></span><a href="#fnref:5" rev="footnote"> ↩</a></li></ol></div></div>
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Wishlily
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://wishlily.github.io/article/linux/2016/09/05/undefined/" title="共享内存">https://wishlily.github.io/article/linux/2016/09/05/undefined/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/IPC/" rel="tag"><i class="fa fa-tag"></i> IPC</a>
+              <a href="/tags/SysV/" rel="tag"><i class="fa fa-tag"></i> SysV</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/linux/2016/09/01/undefined/" rel="prev" title="信号量">
+      <i class="fa fa-chevron-left"></i> 信号量
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/linux/2016/11/30/undefined/" rel="next" title="脚本">
+      脚本 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B5%81%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%87%BD%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#shmget"><span class="nav-number">2.1.</span> <span class="nav-text">shmget</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#shmctl"><span class="nav-number">2.2.</span> <span class="nav-text">shmctl</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#shmat-shmdt"><span class="nav-number">2.3.</span> <span class="nav-text">shmat&#x2F;shmdt</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B"><span class="nav-number">3.</span> <span class="nav-text">实例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%AA%E5%90%8C%E6%AD%A5"><span class="nav-number">3.1.</span> <span class="nav-text">未同步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E4%BC%98%E5%85%88%E9%94%81"><span class="nav-number">3.2.</span> <span class="nav-text">写优先锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%92%E6%96%A5%E9%94%81"><span class="nav-number">3.3.</span> <span class="nav-text">互斥锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%BB%E5%86%99%E9%94%81"><span class="nav-number">3.4.</span> <span class="nav-text">读写锁</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Wishlily"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Wishlily</p>
+  <div class="site-description" itemprop="description">幸福就是你此刻坚信着未来会越来越好</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Wishlily" title="Github → https:&#x2F;&#x2F;github.com&#x2F;Wishlily" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:emily.work@foxmail.com" title="Email → mailto:emily.work@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>Email</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Wishlily</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+  <div style="display: none;">
+    <script src="//s95.cnzz.com/z_stat.php?id=1261536881&web_id=1261536881"></script>
+  </div>
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: true,
+      notify: false,
+      appId: '5aCsCCkdt4qILYWhFaLSdqMf-MdYXbMMI',
+      appKey: 'X2n51rCfxIPxUYBU5MIgMaV2',
+      placeholder: "(｡･∀･)ﾉﾞ",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: true,
+      lang: 'zh-cn' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":-31,"vOffset":-12},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>

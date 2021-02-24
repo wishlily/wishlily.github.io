@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="_Nk6BnUFRZtnEJUeBDVnmuwf3WmBce1pg7RUjI55CSY">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://wishlily.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="之前一直用 Notepad++ ，后来发现了 Sublime Text 被界面和风格吸引了，而且支持各种 markdown 插件，来试试好不好用，如果上手了就可以抛弃 Notepad 了。以下是网上各种资料的整理以便快速搭建顺手的环境。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Sublime Text">
+<meta property="og:url" content="https://wishlily.github.io/article/tools/2016/01/23/undefined/index.html">
+<meta property="og:site_name" content="Wishlily&#39;s blog">
+<meta property="og:description" content="之前一直用 Notepad++ ，后来发现了 Sublime Text 被界面和风格吸引了，而且支持各种 markdown 插件，来试试好不好用，如果上手了就可以抛弃 Notepad 了。以下是网上各种资料的整理以便快速搭建顺手的环境。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2016-01-23T10:00:00.000Z">
+<meta property="article:modified_time" content="2018-05-28T10:00:00.000Z">
+<meta property="article:author" content="Wishlily">
+<meta property="article:tag" content="ide">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://wishlily.github.io/article/tools/2016/01/23/undefined/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Sublime Text | Wishlily's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Wishlily's blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Wishlily's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://wishlily.github.io/article/tools/2016/01/23/undefined/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Wishlily">
+      <meta itemprop="description" content="幸福就是你此刻坚信着未来会越来越好">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Wishlily's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Sublime Text
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-01-23 18:00:00" itemprop="dateCreated datePublished" datetime="2016-01-23T18:00:00+08:00">2016-01-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2018-05-28 18:00:00" itemprop="dateModified" datetime="2018-05-28T18:00:00+08:00">2018-05-28</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/tools/" itemprop="url" rel="index">
+                    <span itemprop="name">tools</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/article/tools/2016/01/23/undefined/" class="post-meta-item leancloud_visitors" data-flag-title="Sublime Text" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/article/tools/2016/01/23/undefined/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/article/tools/2016/01/23/undefined/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>之前一直用 Notepad++ ，后来发现了 Sublime Text 被界面和风格吸引了，而且支持各种 markdown 插件，来试试好不好用，如果上手了就可以抛弃 Notepad 了。<br>以下是网上各种资料的整理以便快速搭建顺手的环境。</p>
+<a id="more"></a>
+
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>官方网站：<a target="_blank" rel="noopener" href="http://www.sublimetext.com/">http://www.sublimetext.com/</a><br>根据平台下载相应版本并安装</p>
+<h1 id="Package-Control"><a href="#Package-Control" class="headerlink" title="Package Control"></a>Package Control</h1><p>这个应该算是必须安装的吧，一键管理所有插件有木有。<br>安装方法可见官网：<a target="_blank" rel="noopener" href="https://packagecontrol.io/installation">https://packagecontrol.io/installation</a></p>
+<ul>
+<li><code>View &gt; Show Console</code></li>
+<li>在命令行输入命令，注意是最下面的一行，不是在文件里面输入（开始犯的低级错误）</li>
+<li>重启软件<br>使用方法 <code>Ctrl + Shift  + P</code> 调出 Package Control，<br>安装插件，输入 install，选择 <code>Install Package</code>，然后可以搜索插件了，<br>卸载插件，输入 remove，选择 <code>Remove Package</code></li>
+</ul>
+<h1 id="语言包"><a href="#语言包" class="headerlink" title="语言包"></a>语言包</h1><h2 id="ConvertToUTF8"><a href="#ConvertToUTF8" class="headerlink" title="ConvertToUTF8"></a>ConvertToUTF8</h2><p>将文件编码转换为 UTF8 插件</p>
+<h2 id="ChineseLocalization"><a href="#ChineseLocalization" class="headerlink" title="ChineseLocalization"></a>ChineseLocalization</h2><p>菜单栏汉化包</p>
+<h1 id="基本教程"><a href="#基本教程" class="headerlink" title="基本教程"></a>基本教程</h1><p><a target="_blank" rel="noopener" href="http://zh.lucida.me/blog/sublime-text-complete-guide/">Sublime Text 全程指南</a><br><a target="_blank" rel="noopener" href="http://www.jianshu.com/p/d1b9a64e2e37">Sublime Text：学习资源篇</a></p>
+<ul>
+<li>显示制表符和空格<br>用户设置中添加：<code>&quot;draw_white_space&quot;: &quot;all&quot;</code></li>
+<li>中文输入法问题<br>输入框无法跟随，安装 <code>IMESupport</code> 插件即可</li>
+<li>快速跳转<br><code>Ctrl + R</code></li>
+<li>删除空行<br><code>Ctrl+H</code> 进入替换模式，然后 <code>Alt+R</code> 或者点击左边第一行一个的正则表达式，变得更灰表示使用正则模式。第一行查找部分输入<code>^\n</code> 替换部分为空，再 <code>Replace All</code>。这样就可以把所有空行都删掉。</li>
+</ul>
+<h1 id="其他插件"><a href="#其他插件" class="headerlink" title="其他插件"></a>其他插件</h1><h2 id="Compare-Side-By-Side"><a href="#Compare-Side-By-Side" class="headerlink" title="Compare Side-By-Side"></a>Compare Side-By-Side</h2><p>简易比较工具，标签上右键选择</p>
+<h2 id="HexViewer"><a href="#HexViewer" class="headerlink" title="HexViewer"></a>HexViewer</h2><p>连这个都有，分析十六进制的利器啊，需要使用 Package Control 开启</p>
+<h2 id="Markdown"><a href="#Markdown" class="headerlink" title="Markdown"></a>Markdown</h2><h3 id="MarkDown-Editing"><a href="#MarkDown-Editing" class="headerlink" title="MarkDown Editing"></a>MarkDown Editing</h3><p>基本编辑</p>
+<h3 id="OmniMarkupPreviwer"><a href="#OmniMarkupPreviwer" class="headerlink" title="OmniMarkupPreviwer"></a>OmniMarkupPreviwer</h3><p>实时渲染到网页<br>可以配置基本扩展：<code>首选项 -&gt; Package Setttings -&gt; OmniMarkupPreviwer -&gt; Settings User</code><br>配置如下：</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;mathjax_enabled&quot;</span>: <span class="literal">true</span>,</span><br><span class="line">    <span class="attr">&quot;renderer_options-MarkdownRenderer&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;extensions&quot;</span>: [</span><br><span class="line">            <span class="string">&quot;tables&quot;</span>,</span><br><span class="line">            <span class="string">&quot;fenced_code&quot;</span>,</span><br><span class="line">            <span class="string">&quot;codehilite&quot;</span>,</span><br><span class="line">            <span class="string">&quot;toc&quot;</span>,</span><br><span class="line">            <span class="string">&quot;nl2br&quot;</span>,</span><br><span class="line">            <span class="string">&quot;footnotes&quot;</span>,</span><br><span class="line">            <span class="string">&quot;strikeout&quot;</span></span><br><span class="line">        ]</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Markdown-Extended-amp-Monokai-extended"><a href="#Markdown-Extended-amp-Monokai-extended" class="headerlink" title="Markdown Extended &amp; Monokai extended"></a>Markdown Extended &amp; Monokai extended</h3><p>文中代码高亮<br>使用：<br>Markdown Extended：<code>View -&gt; Syntax -&gt; Open all with current extension as… -&gt; Markdown Extended</code><br>Monokai extended：<code>Preferences&gt;Color Scheme&gt;Monokai Extended</code></p>
+<h3 id="TableEditor"><a href="#TableEditor" class="headerlink" title="TableEditor"></a>TableEditor</h3><p>自动对齐表格</p>
+<h3 id="Markdown-TOC"><a href="#Markdown-TOC" class="headerlink" title="Markdown TOC"></a>Markdown TOC</h3><p>自动插入目录，可配置目录级数，和自动超链接，一般如下设置即可。<br><code>depth=3 autolink=true bracket=round</code></p>
+<h3 id="Snippets"><a href="#Snippets" class="headerlink" title="Snippets"></a>Snippets</h3><p>是 Sublime 自带功能，<code>工具 -&gt; 代码段</code> 能查看现在支持的复用代码段。<br>创建：<code>工具 -&gt; 新代码段</code></p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">snippet</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">content</span>&gt;</span>&lt;![CDATA[ 你需要插入的代码片段$&#123;1:name&#125; ]]&gt;<span class="tag">&lt;/<span class="name">content</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 可选：快捷键，利用Tab自动补全代码的功能 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">tabTrigger</span>&gt;</span>xyzzy<span class="tag">&lt;/<span class="name">tabTrigger</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 可选：使用范围，不填写代表对所有文件有效。附：source.css和test.html分别对应不同文件。 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>source.python<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- 可选：在snippet菜单中的显示说明（支持中文）。如果不定义，菜单则显示当前文件的文件名。 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">description</span>&gt;</span>My Fancy Snippet<span class="tag">&lt;/<span class="name">description</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">snippet</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p><code>$&#123;1:name&#125;</code> 表示代码插入后，光标所停留的位置，可同时插入多个。其中 <code>:name</code> 为自定义参数（可选）。<br><code>$&#123;2&#125;</code> 表示代码插入后，按 Tab 键，光标会根据顺序跳转到相应位置（以此类推）。<br>保存在 <code>Data\Packages\User</code> 下，后缀名为 <code>.sublime-snippet</code>。<br>使用方法：<code>name</code> Tab 键</p>
+<h2 id="CoolFormat"><a href="#CoolFormat" class="headerlink" title="CoolFormat"></a>CoolFormat</h2><p>代码自动格式化（不能格式化 golang）<br>需要格式化的代码保存为相应后缀文件，一般用来整理笔记中粘贴的代码，可节省一部分时间。<br>相应设置在  <code>CoolFormatConfig.cfconfig</code> 文件中：<br><code>C++=&quot;&quot;-A10-p-N-Y-H-U-xe-k3-j&quot;&quot;</code></p>
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h1><h2 id="Settings"><a href="#Settings" class="headerlink" title="Settings"></a>Settings</h2><p>显示文件类型：</p>
+<pre><code>&quot;show_encoding&quot;: true,
+&quot;show_line_endings&quot;: true,</code></pre><p>设置默认换行符：</p>
+<pre><code>&quot;default_line_ending&quot;: &quot;unix&quot;</code></pre><p>增强显示：</p>
+<pre><code>&quot;highlight_line&quot;: true,
+&quot;highlight_modified_tabs&quot;: true,</code></pre><p>自动删除行末空格：</p>
+<pre><code>&quot;trim_trailing_white_space_on_save&quot;: true</code></pre><p>设置主题：</p>
+<pre><code>&quot;theme&quot;: &quot;Lanzhou.sublime-theme&quot;</code></pre><p>设置快捷键：</p>
+<pre><code>[
+    &#123; &quot;keys&quot;: [&quot;ctrl+k&quot;], &quot;command&quot;: &quot;toggle_side_bar&quot; &#125;, //隐藏显示文件目录
+    &#123; &quot;keys&quot;: [&quot;alt+s&quot;], &quot;command&quot;: &quot;toggle_menu&quot; &#125;,      //隐藏显示菜单栏
+]</code></pre><h2 id="Snippet"><a href="#Snippet" class="headerlink" title="Snippet"></a>Snippet</h2><ul>
+<li><code>mdl</code> 插入链接  <figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">snippet</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">content</span>&gt;</span>&lt;![CDATA[</span><br><span class="line">[$&#123;1:Display_Text&#125;]($&#123;2:http://example.com/&#125; $&#123;3:&quot;$2&quot;&#125;)</span><br><span class="line">]]&gt;<span class="tag">&lt;/<span class="name">content</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">tabTrigger</span>&gt;</span>mdl<span class="tag">&lt;/<span class="name">tabTrigger</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>text.html.markdown.multimarkdown, text.html.markdown<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">description</span>&gt;</span>Insert Link<span class="tag">&lt;/<span class="name">description</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">snippet</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><code>mdll</code> 插入参考式链接  <figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">snippet</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">content</span>&gt;</span>&lt;![CDATA[</span><br><span class="line">[$&#123;1:Display_Text&#125;][$&#123;2:id&#125;]$5</span><br><span class="line">[$2]:$&#123;3:http://example.com/&#125; $&#123;4:&quot;$3&quot;&#125;</span><br><span class="line">]]&gt;<span class="tag">&lt;/<span class="name">content</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">tabTrigger</span>&gt;</span>mdll<span class="tag">&lt;/<span class="name">tabTrigger</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>text.html.markdown.multimarkdown, text.html.markdown<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">description</span>&gt;</span>Link Anchor<span class="tag">&lt;/<span class="name">description</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">snippet</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><code>mdi</code> 插入图片  <figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">snippet</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">content</span>&gt;</span>&lt;![CDATA[</span><br><span class="line">![$&#123;1:Some_Text&#125;]($&#123;2:url_to_image&#125; $&#123;3:&quot;$1&quot;&#125;)</span><br><span class="line">]]&gt;<span class="tag">&lt;/<span class="name">content</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">tabTrigger</span>&gt;</span>mdi<span class="tag">&lt;/<span class="name">tabTrigger</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>text.html.markdown.multimarkdown, text.html.markdown<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">description</span>&gt;</span>Insert Image<span class="tag">&lt;/<span class="name">description</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">snippet</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li><code>mdn</code> 插入注脚  <figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">snippet</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">content</span>&gt;</span>&lt;![CDATA[</span><br><span class="line">[^$&#123;1:Footnote&#125;]$3</span><br><span class="line">[^$1]:$&#123;2:Footnote_Text&#125;</span><br><span class="line">]]&gt;<span class="tag">&lt;/<span class="name">content</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">tabTrigger</span>&gt;</span>mdn<span class="tag">&lt;/<span class="name">tabTrigger</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>text.html.markdown.multimarkdown, text.html.markdown<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">description</span>&gt;</span>Insert Footnote<span class="tag">&lt;/<span class="name">description</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">snippet</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Wishlily
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://wishlily.github.io/article/tools/2016/01/23/undefined/" title="Sublime Text">https://wishlily.github.io/article/tools/2016/01/23/undefined/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/ide/" rel="tag"><i class="fa fa-tag"></i> ide</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/tools/2015/10/13/undefined/" rel="prev" title="StarUML">
+      <i class="fa fa-chevron-left"></i> StarUML
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/tools/2016/07/28/undefined/" rel="next" title="Hexo Blog">
+      Hexo Blog <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Package-Control"><span class="nav-number">2.</span> <span class="nav-text">Package Control</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%AD%E8%A8%80%E5%8C%85"><span class="nav-number">3.</span> <span class="nav-text">语言包</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ConvertToUTF8"><span class="nav-number">3.1.</span> <span class="nav-text">ConvertToUTF8</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ChineseLocalization"><span class="nav-number">3.2.</span> <span class="nav-text">ChineseLocalization</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%95%99%E7%A8%8B"><span class="nav-number">4.</span> <span class="nav-text">基本教程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E6%8F%92%E4%BB%B6"><span class="nav-number">5.</span> <span class="nav-text">其他插件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Compare-Side-By-Side"><span class="nav-number">5.1.</span> <span class="nav-text">Compare Side-By-Side</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HexViewer"><span class="nav-number">5.2.</span> <span class="nav-text">HexViewer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Markdown"><span class="nav-number">5.3.</span> <span class="nav-text">Markdown</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MarkDown-Editing"><span class="nav-number">5.3.1.</span> <span class="nav-text">MarkDown Editing</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OmniMarkupPreviwer"><span class="nav-number">5.3.2.</span> <span class="nav-text">OmniMarkupPreviwer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Markdown-Extended-amp-Monokai-extended"><span class="nav-number">5.3.3.</span> <span class="nav-text">Markdown Extended &amp; Monokai extended</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TableEditor"><span class="nav-number">5.3.4.</span> <span class="nav-text">TableEditor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Markdown-TOC"><span class="nav-number">5.3.5.</span> <span class="nav-text">Markdown TOC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Snippets"><span class="nav-number">5.3.6.</span> <span class="nav-text">Snippets</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CoolFormat"><span class="nav-number">5.4.</span> <span class="nav-text">CoolFormat</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%99%84%E5%BD%95"><span class="nav-number">6.</span> <span class="nav-text">附录</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Settings"><span class="nav-number">6.1.</span> <span class="nav-text">Settings</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Snippet"><span class="nav-number">6.2.</span> <span class="nav-text">Snippet</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Wishlily"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Wishlily</p>
+  <div class="site-description" itemprop="description">幸福就是你此刻坚信着未来会越来越好</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Wishlily" title="Github → https:&#x2F;&#x2F;github.com&#x2F;Wishlily" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:emily.work@foxmail.com" title="Email → mailto:emily.work@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>Email</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Wishlily</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+  <div style="display: none;">
+    <script src="//s95.cnzz.com/z_stat.php?id=1261536881&web_id=1261536881"></script>
+  </div>
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: true,
+      notify: false,
+      appId: '5aCsCCkdt4qILYWhFaLSdqMf-MdYXbMMI',
+      appKey: 'X2n51rCfxIPxUYBU5MIgMaV2',
+      placeholder: "(｡･∀･)ﾉﾞ",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: true,
+      lang: 'zh-cn' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":-31,"vOffset":-12},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>

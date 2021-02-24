@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="_Nk6BnUFRZtnEJUeBDVnmuwf3WmBce1pg7RUjI55CSY">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://wishlily.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="这是篇几年前总结的文档，现在重新整理一下。首先建议看下《看得懂的 RFID 原理》这篇文章，当初找了不少资料就这篇让我明白了些 RFID 是怎么通信的。 ISO14443A 是常见的协议标准，大致如下： 载波频率 f：13.56MHz数据传输率：13.56MHz&#x2F;128 &#x3D; 106Kbit&#x2F;s普通卡 PICC UID：  4 个字节 32 位数据 7 个字节 10 个字节  各部分协议内容：  I">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RFID：ISO14443A">
+<meta property="og:url" content="https://wishlily.github.io/article/bus/2018/05/18/rfid-iso14443a/index.html">
+<meta property="og:site_name" content="Wishlily&#39;s blog">
+<meta property="og:description" content="这是篇几年前总结的文档，现在重新整理一下。首先建议看下《看得懂的 RFID 原理》这篇文章，当初找了不少资料就这篇让我明白了些 RFID 是怎么通信的。 ISO14443A 是常见的协议标准，大致如下： 载波频率 f：13.56MHz数据传输率：13.56MHz&#x2F;128 &#x3D; 106Kbit&#x2F;s普通卡 PICC UID：  4 个字节 32 位数据 7 个字节 10 个字节  各部分协议内容：  I">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-reqa.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-atqa.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-uid.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-uid-nxp.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-anticollision.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-sel.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-sel-level.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-nvb.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-anticollision-eg.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-uid-bcc.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-sak.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-sak-nxp.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-m1.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-m1-disk.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-ctrl-block.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-access-bit.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-access-bit-2.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-access.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-val.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-access-data.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-cmd.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-auth-1.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-auth-2.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-auth-cmd.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-auth.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-read.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-write-1.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-write-2.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-write-3.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-write-4.png">
+<meta property="article:published_time" content="2018-05-18T06:43:30.000Z">
+<meta property="article:modified_time" content="2018-05-18T06:43:30.000Z">
+<meta property="article:author" content="Wishlily">
+<meta property="article:tag" content="rfid">
+<meta property="article:tag" content="pn512">
+<meta property="article:tag" content="m1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-reqa.png">
+
+<link rel="canonical" href="https://wishlily.github.io/article/bus/2018/05/18/rfid-iso14443a/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>RFID：ISO14443A | Wishlily's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<link rel="alternate" href="/atom.xml" title="Wishlily's blog" type="application/atom+xml">
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Wishlily's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://wishlily.github.io/article/bus/2018/05/18/rfid-iso14443a/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Wishlily">
+      <meta itemprop="description" content="幸福就是你此刻坚信着未来会越来越好">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Wishlily's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RFID：ISO14443A
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-05-18 14:43:30" itemprop="dateCreated datePublished" datetime="2018-05-18T14:43:30+08:00">2018-05-18</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/bus/" itemprop="url" rel="index">
+                    <span itemprop="name">bus</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/article/bus/2018/05/18/rfid-iso14443a/" class="post-meta-item leancloud_visitors" data-flag-title="RFID：ISO14443A" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/article/bus/2018/05/18/rfid-iso14443a/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/article/bus/2018/05/18/rfid-iso14443a/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这是篇几年前总结的文档，现在重新整理一下。<br>首先建议看下《<a target="_blank" rel="noopener" href="http://bbs.21ic.com/blog-15467-89510.html">看得懂的 RFID 原理</a>》这篇文章，当初找了不少资料就这篇让我明白了些 RFID 是怎么通信的。</p>
+<p>ISO14443A 是常见的协议标准，大致如下：</p>
+<p>载波频率 f：13.56MHz<br>数据传输率：13.56MHz/128 = 106Kbit/s<br>普通卡 PICC UID：</p>
+<ul>
+<li>4 个字节 32 位数据</li>
+<li>7 个字节</li>
+<li>10 个字节</li>
+</ul>
+<p>各部分协议内容：</p>
+<ol>
+<li>ISO/IEC 14443-1 制定了 PICC 的物理特性</li>
+<li>ISO/IEC 14443-2 制定了射频功率及信号界面特性</li>
+<li>ISO/IEC 14443-3 PICC 初始化和防冲突机制</li>
+<li>ISO/IEC 14443-4 有关交易的协定</li>
+</ol>
+<p>以下通过读卡器读卡来理解该协议，其中缩写表示如下：<br>PICC：普通卡（M1 卡）<br>PCD：读卡器（PN512）</p>
+<a id="more"></a>
+
+<h1 id="选卡"><a href="#选卡" class="headerlink" title="选卡"></a>选卡</h1><h2 id="PICC-gt-Power-Off"><a href="#PICC-gt-Power-Off" class="headerlink" title="PICC -&gt; Power Off"></a>PICC -&gt; Power Off</h2><p>PICC 静止状态周围没有可激活的 PCD 有效场</p>
+<h2 id="PICC-gt-Idle"><a href="#PICC-gt-Idle" class="headerlink" title="PICC -&gt; Idle"></a>PICC -&gt; Idle</h2><p>PICC 进入 PCD 有效场，进入 Idle 状态（t&lt;=5ms），Idle 态可接受命令</p>
+<h2 id="REQA-lt-PCD"><a href="#REQA-lt-PCD" class="headerlink" title="REQA &lt;- PCD"></a>REQA &lt;- PCD</h2><p>PCD 发送 REQA，检测是否有 PICC，0x26 7-bit 数据<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-reqa.png" alt="REQA"></p>
+<blockquote>
+<p>Ps：两个连续 REQA 间隔 7000 / f （&gt; 0.516ms）</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;&gt; Mifare Request:</span><br><span class="line">SR 0A 80    &#x2F;&#x2F; flush FIFO</span><br><span class="line">SR 09 26    &#x2F;&#x2F; FIFO - Request code</span><br><span class="line">SR 0D 87    &#x2F;&#x2F; BitframingReg - StartSend, TxLastBits</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>PN512 简单测试用例脚本</p>
+</blockquote>
+<h2 id="PICC-gt-ATQA"><a href="#PICC-gt-ATQA" class="headerlink" title="PICC -&gt; ATQA"></a>PICC -&gt; ATQA</h2><p>PICC 向 PCD 发送自身信息<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-atqa.png" alt="ATQA"><br>其中 b7b8 可以知道该卡 UID 字节数，一般定义如下：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-uid.png" alt="UID"><br>b5-b1 一般只有 1bit 为 1，如果有 2bit 为 1 则冲突了</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;&gt; Response ATQ:</span><br><span class="line">GR 06       &#x2F;&#x2F; Read ErrReg</span><br><span class="line">RE 0A 02    &#x2F;&#x2F; Read FIFOLevel</span><br><span class="line">GR 09       &#x2F;&#x2F; ATQ LSB    &#x2F;&#x2F; data&#x3D;04</span><br><span class="line">GR 09       &#x2F;&#x2F; ATQ MSB    &#x2F;&#x2F; data&#x3D;00 -&gt; Mifare Plus</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>PCD 读到的数据是 0x0004，通过芯片官方文档（见下）可知该卡是 Mifare Plus 4 Byte UID 型号<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-uid-nxp.png" alt="NXP"></p>
+</blockquote>
+<h2 id="Anticollision-lt-PCD"><a href="#Anticollision-lt-PCD" class="headerlink" title="Anticollision &lt;- PCD"></a>Anticollision &lt;- PCD</h2><p>防冲突没有实践过，所以可能理解有误。<br>下图是防冲突流程图：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-anticollision.png" alt="anticollision"><br>由上图可以看出 PCD 发送的命令有 <code>SEL</code> <code>NVB</code> <code>UID CLn</code> 等部分组成：</p>
+<ul>
+<li><code>SEL</code>：Select code 值可能是 0x93 0x95 0x97，表示不同的冲突阶段<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-sel.png" alt="sel"><br>防冲突等级区分如下（感觉和 UID 大小有关）：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-sel-level.png" alt="sel-level"></li>
+<li><code>NVB</code>：Number of Valid Bits 冲突发生的位置（第几个字节第几个位置）<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-nvb.png" alt="nvb"></li>
+</ul>
+<p>官方文档有个防冲突例子，感觉还挺清楚的：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-anticollision-eg.png" alt="eg"></p>
+<blockquote>
+<p>我的理解 PCD 防冲突检测第一阶段,要求所有 PICC 返回自己的 UID，<br>读卡器发送：<code>0x93 0x20</code>，<br>当冲突发生时，PCD 接收不完整的 UID，截止在冲突处（不是很明白 PCD 怎么知道冲突了？），<br>下次 PCD 发送收到不完整 UID，PICC 接着响应直到没有冲突。</p>
+</blockquote>
+<h2 id="PICC-gt-UID"><a href="#PICC-gt-UID" class="headerlink" title="PICC -&gt; UID"></a>PICC -&gt; UID</h2><p>PICC 返回自己的 UID（记不清 PCD 是不是要先发送 <code>0x93 0x20</code> 了）<br>UID 格式如下：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-uid-bcc.png" alt="uid-bcc"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;&gt;         Response SNR:</span><br><span class="line">GR 06       &#x2F;&#x2F; Read ErrReg</span><br><span class="line">RE 0A 05    &#x2F;&#x2F; Read FIFOLevel</span><br><span class="line">GR 09       &#x2F;&#x2F; Read SNR 0   &#x2F;&#x2F; data&#x3D;7A</span><br><span class="line">GR 09       &#x2F;&#x2F; Read SNR 1   &#x2F;&#x2F; data&#x3D;4E</span><br><span class="line">GR 09       &#x2F;&#x2F; Read SNR 2   &#x2F;&#x2F; data&#x3D;39</span><br><span class="line">GR 09       &#x2F;&#x2F; Read SNR 3   &#x2F;&#x2F; data&#x3D;48</span><br><span class="line">GR 09       &#x2F;&#x2F; Read SNR 4 (check byte)   &#x2F;&#x2F; data&#x3D;45</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>BCC 为校验码，所以上面例子卡的 UID = 7A4E3948</p>
+</blockquote>
+<h2 id="SEL-lt-PCD"><a href="#SEL-lt-PCD" class="headerlink" title="SEL &lt;- PCD"></a>SEL &lt;- PCD</h2><p>PCD 选择一张卡，发送 <code>0x93 0x70 UID BCC CRC</code></p>
+<blockquote>
+<p>有的芯片设置需要打开 CRC 校验</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;&gt; Mifare Select:</span><br><span class="line">SR 0a 80    &#x2F;&#x2F; flush FIFO</span><br><span class="line">SR 12 80    &#x2F;&#x2F; TxMode: activate CRC</span><br><span class="line">SR 13 80    &#x2F;&#x2F; RxMode: activate CRC</span><br><span class="line">SR 09 93    &#x2F;&#x2F; fast activation of Mifare</span><br><span class="line">SR 09 70    &#x2F;&#x2F; NVB byte</span><br><span class="line">SR 09 7A    &#x2F;&#x2F; Write SNR 0</span><br><span class="line">SR 09 4E    &#x2F;&#x2F; Write SNR 1</span><br><span class="line">SR 09 39    &#x2F;&#x2F; Write SNR 2</span><br><span class="line">SR 09 48    &#x2F;&#x2F; Write SNR 3</span><br><span class="line">SR 09 45    &#x2F;&#x2F; Write SNR 4 (check byte)</span><br><span class="line">SR 0d 80    &#x2F;&#x2F; BitframingReg - StartSend, TxLastBits</span><br></pre></td></tr></table></figure>
+
+<h2 id="PICC-gt-SAK"><a href="#PICC-gt-SAK" class="headerlink" title="PICC -&gt; SAK"></a>PICC -&gt; SAK</h2><p>PICC 确认 PCD 的选择<br>回复格式：SAK + CRC16 (2-byte)<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-sak.png" alt="sak"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;&gt;         Response SAK:</span><br><span class="line">GR 06       &#x2F;&#x2F; Read ErrReg</span><br><span class="line">RE 0A 01    &#x2F;&#x2F; Read FIFOLevel</span><br><span class="line">GR 09       &#x2F;&#x2F; Read SAK   &#x2F;&#x2F; data&#x3D;08 Mifare Classic 1K</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>例子中 SAK 回复 0x08，查看芯片手册为 Mifare Classic 1K 卡<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-sak-nxp.png" alt="sak-nxp"></p>
+</blockquote>
+<h1 id="读写-EEPROM"><a href="#读写-EEPROM" class="headerlink" title="读写 EEPROM"></a>读写 EEPROM</h1><h2 id="Mifare1-Card"><a href="#Mifare1-Card" class="headerlink" title="Mifare1 Card"></a>Mifare1 Card</h2><p>Mifare 1 卡片采用 EEPROM 作为存储介质，容量为 1K × 8 位 ，分为 16 个扇区（0<del>15），每个扇区有 4 个块（0</del>3），每块有 16 字节。一个扇区共 16Byte × 4 = 64Byte。扇区的第四块称作尾块，包含了该扇区的密码 A（6个字节）、存取控制（4个字节）、密码 B（6个字节），是控制块。其余三块是数据块。<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-m1.png" alt="m1"><br>扇区 0 的块 0 固化了厂商代码信息，不可改写。<br>其中：</p>
+<ul>
+<li>第 0~4 字节为卡片的序列号</li>
+<li>第 5 字节为序列号的校验码</li>
+<li>第 6 字节为卡片的容量「SIZE」</li>
+<li>第 7，8 字节为卡片的类型号（Tagtype）</li>
+<li>其他字节由厂商另加定义</li>
+</ul>
+<p>如下图所示：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-m1-disk.png" alt="m1-disk"></p>
+<h3 id="Control-blocks"><a href="#Control-blocks" class="headerlink" title="Control blocks"></a>Control blocks</h3><p>即每个扇区最后一块<br>存储格式如下：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-ctrl-block.png" alt="ctrl-block"></p>
+<ul>
+<li>KeyA/B: 读取时返回 0（对 Key 的一种保护吧，默认 Key 一般是 0xFFFFFFFFFFFF），KeyB 不用可做数据字节( 9 字节亦然)</li>
+<li>Access Bit: 控制位，表示扇区各块属性<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-access-bit.png" alt="access-bit"><br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-access-bit-2.png" alt="access-bit-2"></li>
+<li>Byte9：没有实际意义，可当作数据块</li>
+</ul>
+<p>控制块读写权限表如下：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-access.png" alt="access"></p>
+<blockquote>
+<p>图中灰色区域 keyB 可以当作数据区使用<br>修改 access bit 后最好重新认证一下</p>
+</blockquote>
+<h3 id="Data-blocks"><a href="#Data-blocks" class="headerlink" title="Data blocks"></a>Data blocks</h3><p>数据块，一般分两类：</p>
+<ol>
+<li>read/write blocks<br>一般用在非接触门禁管理，好像没有特殊格式要求</li>
+<li>value blocks<br>其实应该是 read/write blocks 的特殊类型，一般用在电子钱包，有增值/减值（单独操作命令）<br>存储格式如下图：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-val.png" alt="val"><blockquote>
+<p>可操作命令包括 read，write，increment（增值），decrement（减值），restore（恢复），transfer（转移）<br>Vaule 值需要先按照上述格式 write 到存储数据，才能使用增减值等特殊指令操作<br>Adr 是进行备份管理时，用于保存块地址，只能通过 write 命令更改</p>
+</blockquote>
+</li>
+</ol>
+<p>数据块操作权限表如下：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-access-data.png" alt="access-data"></p>
+<blockquote>
+<p>在用于非充值卡的一种情况（001）下，只能够读和减值<br>在另一种情况（110）下，可以用 keyB 充值<br>终极权限下（111）扇区再也不能修改，keyA/B 需要保管好</p>
+</blockquote>
+<h3 id="Command"><a href="#Command" class="headerlink" title="Command"></a>Command</h3><p>M1 卡控制命令，上面都有提到，具体列表如下：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-cmd.png" alt="cmd"></p>
+<h2 id="Authentication"><a href="#Authentication" class="headerlink" title="Authentication"></a>Authentication</h2><p>M1 卡手册中认证需要如下过程：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-auth-1.png" alt="auth-1"><br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-auth-2.png" alt="auth-2"><br>命令表示如下：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-auth-cmd.png" alt="auth-cmd"><br>不过这部分其实还是要看读卡器怎么设置，PN512 手册里面要求如下：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-auth.png" alt="auth"><br>即在 FIFO 写入 <code>60/61 + addr + keyA/B(6byte) + UID(4byte)</code> + <code>CRC</code><br>判断认证结果：</p>
+<ul>
+<li>成功：<code>Status2 Reg[3]=1</code></li>
+<li>失败：<code>Status2 Reg[3]=0</code></li>
+</ul>
+<h2 id="Read"><a href="#Read" class="headerlink" title="Read"></a>Read</h2><p>时序图：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-read.png" alt="read"><br>PN512：<br>发送：<code>30 + addr</code> + <code>CRC</code><br>接收：<code>data(16byte)</code> + <code>CRC</code></p>
+<h2 id="Write"><a href="#Write" class="headerlink" title="Write"></a>Write</h2><p>时序图：<br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-write-1.png" alt="write-1"><br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-write-2.png" alt="write-2"><br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-write-3.png" alt="write-3"><br><img src="https://wishlily.github.io/images/article/bus/2018/05/18/rfid-iso14443a/20180517-write-4.png" alt="write-4"><br>PN512：<br>发送: <code>A0 + addr</code> + <code>CRC</code><br>接收: <code>ACK(A0)/NAK/timeout(5ms)</code> + <strong><code>NO CRC</code></strong><br>发送: <code>data(16byte)</code> + <code>CRC</code><br>接收: <code>ACK(A0)/NAK/timeout(10ms)</code> + <strong><code>NO CRC</code></strong></p>
+<h2 id="Other"><a href="#Other" class="headerlink" title="Other"></a>Other</h2><p>Increment &amp; Decrement &amp; Restore &amp; Transfer 这些命令也像上面一样对照着 M1 卡手册和 PN512 手册查看，这里不再赘述了。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>当初看 RFID 怎么读写时特别困惑，因为读卡器手册上只有寄存器表示什么，没有说里面值要填什么值。<br>后来看了 M1 手册和例子才知道，哦，原来这个协议就是这么规定的。<br>所以有时理解标准协议不如看看相关芯片手册，也许会有惊喜。</p>
+
+    </div>
+
+    
+    
+    
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Wishlily
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://wishlily.github.io/article/bus/2018/05/18/rfid-iso14443a/" title="RFID：ISO14443A">https://wishlily.github.io/article/bus/2018/05/18/rfid-iso14443a/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/rfid/" rel="tag"><i class="fa fa-tag"></i> rfid</a>
+              <a href="/tags/pn512/" rel="tag"><i class="fa fa-tag"></i> pn512</a>
+              <a href="/tags/m1/" rel="tag"><i class="fa fa-tag"></i> m1</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/article/tools/2018/05/14/figure-bed/" rel="prev" title="博客图床">
+      <i class="fa fa-chevron-left"></i> 博客图床
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/article/code/2018/09/29/react-component-communication/" rel="next" title="react 组件通信">
+      react 组件通信 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%80%89%E5%8D%A1"><span class="nav-number">1.</span> <span class="nav-text">选卡</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#PICC-gt-Power-Off"><span class="nav-number">1.1.</span> <span class="nav-text">PICC -&gt; Power Off</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PICC-gt-Idle"><span class="nav-number">1.2.</span> <span class="nav-text">PICC -&gt; Idle</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#REQA-lt-PCD"><span class="nav-number">1.3.</span> <span class="nav-text">REQA &lt;- PCD</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PICC-gt-ATQA"><span class="nav-number">1.4.</span> <span class="nav-text">PICC -&gt; ATQA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Anticollision-lt-PCD"><span class="nav-number">1.5.</span> <span class="nav-text">Anticollision &lt;- PCD</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PICC-gt-UID"><span class="nav-number">1.6.</span> <span class="nav-text">PICC -&gt; UID</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SEL-lt-PCD"><span class="nav-number">1.7.</span> <span class="nav-text">SEL &lt;- PCD</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PICC-gt-SAK"><span class="nav-number">1.8.</span> <span class="nav-text">PICC -&gt; SAK</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BB%E5%86%99-EEPROM"><span class="nav-number">2.</span> <span class="nav-text">读写 EEPROM</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Mifare1-Card"><span class="nav-number">2.1.</span> <span class="nav-text">Mifare1 Card</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Control-blocks"><span class="nav-number">2.1.1.</span> <span class="nav-text">Control blocks</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Data-blocks"><span class="nav-number">2.1.2.</span> <span class="nav-text">Data blocks</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Command"><span class="nav-number">2.1.3.</span> <span class="nav-text">Command</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Authentication"><span class="nav-number">2.2.</span> <span class="nav-text">Authentication</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Read"><span class="nav-number">2.3.</span> <span class="nav-text">Read</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Write"><span class="nav-number">2.4.</span> <span class="nav-text">Write</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Other"><span class="nav-number">2.5.</span> <span class="nav-text">Other</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Wishlily"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Wishlily</p>
+  <div class="site-description" itemprop="description">幸福就是你此刻坚信着未来会越来越好</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Wishlily" title="Github → https:&#x2F;&#x2F;github.com&#x2F;Wishlily" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:emily.work@foxmail.com" title="Email → mailto:emily.work@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>Email</a>
+      </span>
+  </div>
+  <div class="cc-license motion-element" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="/images/cc-by-nc-sa.svg" alt="Creative Commons"></a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Wishlily</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v5.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+  <div style="display: none;">
+    <script src="//s95.cnzz.com/z_stat.php?id=1261536881&web_id=1261536881"></script>
+  </div>
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el: '#valine-comments',
+      verify: true,
+      notify: false,
+      appId: '5aCsCCkdt4qILYWhFaLSdqMf-MdYXbMMI',
+      appKey: 'X2n51rCfxIPxUYBU5MIgMaV2',
+      placeholder: "(｡･∀･)ﾉﾞ",
+      avatar: 'mm',
+      meta: guest,
+      pageSize: '10' || 10,
+      visitor: true,
+      lang: 'zh-cn' || 'zh-cn',
+      path: location.pathname,
+      recordIP: false,
+      serverURLs: ''
+    });
+  }, window.Valine);
+});
+</script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/hijiki.model.json"},"display":{"position":"right","width":150,"height":300,"hOffset":-31,"vOffset":-12},"mobile":{"show":false},"react":{"opacity":0.7},"log":false});</script></body>
+</html>
