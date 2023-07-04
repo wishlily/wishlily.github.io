@@ -1,0 +1,839 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/images/apple-touch-icon.png">
+  <link rel="icon" href="/images/favicon-32x32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Wishlily">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Arduino 101 连接 PC 是通过一条方口 USB 数据线，并且可以通过这条数据线接收板子输出 debug 调试。那么这是如何实现的呢？这部分没有完全看透，只记录下目前收获（也许有误）。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Arduino 101 Serial 实现详解">
+<meta property="og:url" content="https://wishlily.github.io/article/arduino/2017/07/03/undefined/index.html">
+<meta property="og:site_name" content="Wishlily&#39;s blog">
+<meta property="og:description" content="Arduino 101 连接 PC 是通过一条方口 USB 数据线，并且可以通过这条数据线接收板子输出 debug 调试。那么这是如何实现的呢？这部分没有完全看透，只记录下目前收获（也许有误）。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://wishlily.github.io/images/article/arduino/2017/07/03/undefined/sram.png">
+<meta property="article:published_time" content="2017-07-03T07:03:26.000Z">
+<meta property="article:modified_time" content="2017-07-03T07:03:26.000Z">
+<meta property="article:author" content="Wishlily">
+<meta property="article:tag" content="arduino">
+<meta property="article:tag" content="quark">
+<meta property="article:tag" content="usb">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://wishlily.github.io/images/article/arduino/2017/07/03/undefined/sram.png">
+  
+  
+  
+  <title>Arduino 101 Serial 实现详解 - Wishlily&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"wishlily.github.io","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/images/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":"G-R4ZHVCJLGY","tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+    <!-- Google gtag.js -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript('https://www.googletagmanager.com/gtag/js?id=G-R4ZHVCJLGY', function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-R4ZHVCJLGY');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="Wishlily's blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Wishlily&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/banner.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Arduino 101 Serial 实现详解"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2017-07-03 15:03" pubdate>
+          2017年7月3日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          32 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Arduino 101 Serial 实现详解</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>Arduino 101 连接 PC 是通过一条方口 USB 数据线，并且可以通过这条数据线接收板子输出 debug 调试。<br>那么这是如何实现的呢？<br>这部分没有完全看透，只记录下目前收获（也许有误）。</p>
+<span id="more"></span>
+<h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>Arduino 中操作串口是通过 Serial<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup> 类。</p>
+<p><strong>初始化</strong>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">setup</span><span class="hljs-params">()</span> &#123;<br>    Serial.begin(<span class="hljs-number">9600</span>); <span class="hljs-comment">// 波特率设置为 9600</span><br>    <span class="hljs-keyword">while</span>(!Serial);     <span class="hljs-comment">// 等待串口初始化完成</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>发送</strong>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">loop</span><span class="hljs-params">()</span> &#123;<br>    Serial.print(<span class="hljs-string">&quot;Hello World!\n&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>接收</strong>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">serialEvent</span><span class="hljs-params">()</span>&#123; <span class="hljs-comment">// Called when data is available. Use Serial.read() to capture this data.</span><br>    Serial.print(Serial.read());<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<h1 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h1><p>查看代码时发现了应用程序入口其实在 <code>main.cpp</code> 中，如下：</p>
+<blockquote>
+<p>C:\Users\XXX\AppData\Local\Arduino15\packages\Intel\hardware\arc32\2.0.2\cores\arduino\main.cpp</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-built_in">initVariant</span>();<br><span class="hljs-meta">#<span class="hljs-keyword">if</span> defined(USBCON)</span><br>    USBDevice.<span class="hljs-built_in">attach</span>();<br><span class="hljs-meta">#<span class="hljs-keyword">endif</span></span><br>    <span class="hljs-built_in">setup</span>();<br>    <span class="hljs-keyword">for</span> (;;) <span class="hljs-comment">/* This infinite loop is intentional and requested by design */</span><br>    &#123;<br>        <span class="hljs-built_in">loop</span>();<br>        <span class="hljs-keyword">if</span> (serialEventRun) <span class="hljs-built_in">serialEventRun</span>();<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>从中可以看到 <code>setup</code> <code>loop</code> 等函数，这就是通用的 Arduino 代码函数块，可以发现 <code>loop</code> 和 <code>serialEvent</code> 其实是顺序轮询方式，并不是真正中断。</p>
+<h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><p>Serial 部分的源码又在哪里呢？查找后发现对象初始化部分：</p>
+<blockquote>
+<p>C:\Users\XXX\AppData\Local\Arduino15\packages\Intel\hardware\arc32\2.0.2\variants\arduino_101\variant.cpp</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs cpp">uart_init_info info_cdc;<br><span class="hljs-function">CDCSerialClass <span class="hljs-title">Serial</span><span class="hljs-params">(&amp;info_cdc)</span></span>;<br><br>RingBuffer rx_buffer_uart;<br>RingBuffer tx_buffer_uart;<br>uart_init_info info_uart;<br><span class="hljs-function">UARTClass <span class="hljs-title">Serial1</span><span class="hljs-params">(&amp;info_uart, &amp;rx_buffer_uart, &amp;tx_buffer_uart)</span></span>;<br></code></pre></td></tr></table></figure>
+<p>原来 Serial 是全局变量，<code>CDCSerialClass</code> 的构造函数只是赋值，并没有特殊操作。<br>现在已知如下（和板子定义一致）：</p>
+<ul>
+<li>Serial 表示 USB<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup> 串口</li>
+<li>Serial1 表示 UART 串口</li>
+</ul>
+<p>接下来的操作在 <code>initVariant()</code> 中：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">initVariant</span><span class="hljs-params">( <span class="hljs-type">void</span> )</span> </span>&#123;<br>    <span class="hljs-comment">/* Initialise CDC-ACM shared buffers pointers, provided by LMT */</span><br>    Serial.<span class="hljs-built_in">setSharedData</span>(shared_data-&gt;cdc_acm_buffers);<br>    ...<br>&#125;<br></code></pre></td></tr></table></figure>
+<p><code>Serial.setSharedData</code> 只是赋值串口对象指针。</p>
+<blockquote>
+<p>C:\Users\XXX\AppData\Local\Arduino15\packages\Intel\hardware\arc32\2.0.2\cores\arduino\CDCSerialClass.cpp</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">CDCSerialClass::setSharedData</span><span class="hljs-params">(<span class="hljs-keyword">struct</span> cdc_acm_shared_data *cdc_acm_shared_data)</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-keyword">this</span>-&gt;_shared_data = cdc_acm_shared_data;<br>    <span class="hljs-keyword">this</span>-&gt;_rx_buffer = cdc_acm_shared_data-&gt;rx_buffer;<br>    <span class="hljs-keyword">this</span>-&gt;_tx_buffer = cdc_acm_shared_data-&gt;tx_buffer;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>其中 <code>shared_data</code> 是芯片中的 SRAM<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup> 地址为 0xA8000000，共 80K<sup id="fnref:4"><a href="#fn:4" rel="footnote">4</a></sup>。</p>
+<p><img src="https://wishlily.github.io/images/article/arduino/2017/07/03/undefined/sram.png" srcset="/images/loading.gif" lazyload alt="sram"></p>
+<p>关于这段内存的作用，我推测是和内核部分进行交互，因为 <code>CDCSerialClass</code> 中并没有对寄存器的操作。<br>而内核部分也有同样的结构，并且会读取标志位以及设置标志位（内核部分没有详细查看）。<br>内核相关理解如下：</p>
+<ul>
+<li>代码入口在 <code>CODK\CODK-A\x86\projects\arduino101\quark\main.c</code></li>
+<li>驱动部分代码 <code>CODK\CODK-A\x86\bsp\src\drivers\usb</code>（<code>usb_driver_intf</code> 没有找到声明地方）</li>
+</ul>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>以 <code>Serial.print</code> 实现为例，使用该函数会向串口发送字符串。</p>
+<p><code>CDCSerialClass</code> 中并没有定义 <code>print</code> 的方法，此方法乃是继承 <code>class Print</code>，其所有继承关系如下：</p>
+<pre><code class="hljs">CDCSerialClass-&gt;HardwareSerial-&gt;Stream-&gt;Print
+</code></pre>
+<p>某个方法的实现如下：</p>
+<blockquote>
+<p>C:\Users\XXX\AppData\Local\Arduino15\packages\Intel\hardware\arc32\2.0.2\cores\arduino\Print.cpp</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">size_t</span> <span class="hljs-title">Print::print</span><span class="hljs-params">(<span class="hljs-type">char</span> c)</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">write</span>(c);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>而 <code>write</code> 方法在 <code>CDCSerialClass</code> 类中被重写为向串口发送数据，如此便实现了 <code>Serial.print</code> 的功能。</p>
+<h2 id="疑问"><a href="#疑问" class="headerlink" title="疑问"></a>疑问</h2><p><code>CDCSerialClass</code> 中波特率设置似乎没有作用。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">CDCSerialClass::init</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">uint32_t</span> dwBaudRate, <span class="hljs-type">const</span> <span class="hljs-type">uint8_t</span> modeReg)</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-comment">/* Set a per-byte write delay approximately equal to the time it would</span><br><span class="hljs-comment">     * take to clock out a byte on a standard UART at this baud rate */</span><br>    _writeDelayUsec = <span class="hljs-number">8000000</span> / dwBaudRate;<br><br>    <span class="hljs-comment">/* Make sure both ring buffers are initialized back to empty.</span><br><span class="hljs-comment">     * Empty the Rx buffer but don&#x27;t touch Tx buffer: it is drained by the</span><br><span class="hljs-comment">     * LMT one way or another */</span><br>    _rx_buffer-&gt;tail = _rx_buffer-&gt;head;<br><br>    _shared_data-&gt;device_open = <span class="hljs-literal">true</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>以上为初始化部分，从中可以看到 <code>dwBaudRate</code> 只计算了 <code>_writeDelayUsec</code>，没有传递到 <code>_shared_data</code> 中。<br>查找代码又会发现 <code>_writeDelayUsec</code> 没有在其他地方被调用过，那么该波特率还有作用吗？<br>为此我尝试在电脑上随便修改波特率，并和板子通信，发现波特率不匹配也可以通信，不知道是不是因为该口是 USB 虚拟串口的原因？<br>相对应的 <code>Serial1 UARTClass</code> 的 <code>init</code> 中是包含波特率设置代码的。</p>
+<h1 id="修改"><a href="#修改" class="headerlink" title="修改"></a>修改</h1><p>添加 <code>printf</code> 方法<sup id="fnref:5"><a href="#fn:5" rel="footnote">5</a></sup>。<br>我使用的是添加 <code>Print::printf</code>，修改后可在 <code>Serial</code> 中使用 <code>printf</code> 方法了。</p>
+<blockquote>
+<p>C:\Users\XXX\AppData\Local\Arduino15\packages\Intel\hardware\arc32\2.0.2\cores\arduino\Print.cpp</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdarg.h&gt;</span></span><br><span class="hljs-meta">#<span class="hljs-keyword">define</span> PRINTF_BUF 80</span><br><span class="hljs-function"><span class="hljs-type">size_t</span> <span class="hljs-title">Print::printf</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">char</span> *format, ...)</span></span><br><span class="hljs-function"></span>&#123;<br>    <span class="hljs-type">char</span> buf[PRINTF_BUF];<br>    va_list ap;<br>    <span class="hljs-built_in">va_start</span>(ap, format);<br>    <span class="hljs-built_in">vsnprintf</span>(buf, <span class="hljs-built_in">sizeof</span>(buf), format, ap);<br>    <span class="hljs-keyword">for</span>(<span class="hljs-type">char</span> *p = &amp;buf[<span class="hljs-number">0</span>]; *p; p++) &#123;<br>        <span class="hljs-keyword">if</span>(*p == <span class="hljs-string">&#x27;\n&#x27;</span>)<br>            <span class="hljs-built_in">write</span>(<span class="hljs-string">&#x27;\r&#x27;</span>);<br>        <span class="hljs-built_in">write</span>(*p);<br>    &#125;<br>    <span class="hljs-built_in">va_end</span>(ap);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+
+
+<div id="footnotes"><hr><div id="footnotelist"><ol style="list-style:none; padding-left: 0;"><li id="fn:1"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">1.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://www.arduino.cc/en/reference/serial">Serial func</a></span><a href="#fnref:1" rev="footnote"> ↩</a></li><li id="fn:2"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">2.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/USB">USB CDC is a composite Universal Serial Bus device class</a></span><a href="#fnref:2" rev="footnote"> ↩</a></li><li id="fn:3"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">3.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://www.arduino.cc/en/Tutorial/Memory">static random access memory</a></span><a href="#fnref:3" rev="footnote"> ↩</a></li><li id="fn:4"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">4.</span><span style="display: inline-block; vertical-align: top;">Intel® Quark™ SE Microcontroller C1000 Datasheet, Table 24, Mapping Address Spaces</span><a href="#fnref:4" rev="footnote"> ↩</a></li><li id="fn:5"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">5.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://playground.arduino.cc/Main/Printf">Arduino printf</a></span><a href="#fnref:5" rev="footnote"> ↩</a></li></ol></div></div>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/arduino/" class="category-chain-item">arduino</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/arduino/">#arduino</a>
+      
+        <a href="/tags/quark/">#quark</a>
+      
+        <a href="/tags/usb/">#usb</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Arduino 101 Serial 实现详解</div>
+      <div>https://wishlily.github.io/article/arduino/2017/07/03/undefined/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Wishlily</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2017年7月3日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/article/tools/2017/09/07/undefined/" title="Markdown 增强">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Markdown 增强</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/article/tools/2017/06/15/undefined/" title="GCC 常用">
+                        <span class="hidden-mobile">GCC 常用</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#gitalk-container', function() {
+      Fluid.utils.createCssLink('/css/gitalk.css')
+      Fluid.utils.createScript('https://lib.baomitu.com/gitalk/1.8.0/gitalk.min.js', function() {
+        var options = Object.assign(
+          {"clientID":"b3260d026e43480823e3","clientSecret":"68e9726e48be759ac999ffa180da72c5e29c90e5","repo":"wishlily.github.io","owner":"wishlily","admin":["wishlily"],"language":"zh-CN","labels":["Gitalk"],"perPage":10,"pagerDirection":"last","distractionFreeMode":false,"createIssueManually":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token"},
+          {
+            id: '2eacfba16c7edc7a1aa10d784e04d8ca'
+          }
+        )
+        var gitalk = new Gitalk(options);
+        gitalk.render('gitalk-container');
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

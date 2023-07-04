@@ -1,0 +1,820 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/images/apple-touch-icon.png">
+  <link rel="icon" href="/images/favicon-32x32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Wishlily">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="最近使用了一下 grpc 通信，现在整理一下，防止遗忘。 安装grpc 可以支持不同的语言，详细可查看 github。这次我主要使用的是 go 和 java，golang 因为墙的关系有几个包需要找镜像下载1 12345678git clone https:&#x2F;&#x2F;github.com&#x2F;grpc&#x2F;grpc-go.git $GOPATH&#x2F;src&#x2F;google.golang.org&#x2F;grpcgit clo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="grpc">
+<meta property="og:url" content="https://wishlily.github.io/article/bus/2019/06/09/grpc/index.html">
+<meta property="og:site_name" content="Wishlily&#39;s blog">
+<meta property="og:description" content="最近使用了一下 grpc 通信，现在整理一下，防止遗忘。 安装grpc 可以支持不同的语言，详细可查看 github。这次我主要使用的是 go 和 java，golang 因为墙的关系有几个包需要找镜像下载1 12345678git clone https:&#x2F;&#x2F;github.com&#x2F;grpc&#x2F;grpc-go.git $GOPATH&#x2F;src&#x2F;google.golang.org&#x2F;grpcgit clo">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-06-09T06:01:02.000Z">
+<meta property="article:modified_time" content="2019-06-09T06:01:02.000Z">
+<meta property="article:author" content="Wishlily">
+<meta property="article:tag" content="grpc">
+<meta property="article:tag" content="go">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>grpc - Wishlily&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"wishlily.github.io","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/images/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":"G-R4ZHVCJLGY","tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+    <!-- Google gtag.js -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript('https://www.googletagmanager.com/gtag/js?id=G-R4ZHVCJLGY', function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-R4ZHVCJLGY');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="Wishlily's blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Wishlily&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/banner.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="grpc"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2019-06-09 14:01" pubdate>
+          2019年6月9日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          11k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          93 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">grpc</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>最近使用了一下 grpc 通信，现在整理一下，防止遗忘。</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>grpc 可以支持不同的语言，详细可查看 <a target="_blank" rel="noopener" href="https://github.com/grpc/">github</a>。<br>这次我主要使用的是 go 和 java，<br>golang 因为墙的关系有几个包需要找镜像下载<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs shell">git clone https://github.com/grpc/grpc-go.git $GOPATH/src/google.golang.org/grpc<br>git clone https://github.com/golang/net.git $GOPATH/src/golang.org/x/net<br>git clone https://github.com/golang/text.git $GOPATH/src/golang.org/x/text<br>git clone https://github.com/golang/sys.git $GOPATH/src/golang.org/x/sys<br>go get -u github.com/golang/protobuf/&#123;proto,protoc-gen-go&#125;<br>git clone https://github.com/google/go-genproto.git $GOPATH/src/google.golang.org/genproto<br>cd $GOPATH/src/<br>go install google.golang.org/grpc<br></code></pre></td></tr></table></figure>
+<p>我看官方也详细写了使用 <code>go mod</code> 的安装方法。</p>
+<span id="more"></span>
+
+<h2 id="protoc"><a href="#protoc" class="headerlink" title="protoc"></a>protoc</h2><p>这是一个通过 <code>proto</code> 文件，自动生成不同语言代码的工具。<br>github 上可以直接下载 release，地址：<a target="_blank" rel="noopener" href="https://github.com/protocolbuffers/protobuf/releases">https://github.com/protocolbuffers/protobuf/releases</a>。<br>比较省事的就是下载编译好的程序，比如我系统是 linux 64，就下载 <code>protoc-x.x.x-linux-x86_64.zip</code>，直接解压放到 <code>PATH</code> 下就行，<code>protoc --veriosn</code> 查看版本。</p>
+<h2 id="protoc-gen-go"><a href="#protoc-gen-go" class="headerlink" title="protoc-gen-go"></a>protoc-gen-go</h2><p>配合 <code>protoc</code> goalng 使用的插件</p>
+<pre><code class="hljs">go get -u github.com/golang/protobuf/&#123;proto,protoc-gen-go&#125;
+</code></pre>
+<blockquote>
+<p>使用时注意 <code>protoc-gen-go</code> 必须在系统 <code>PATH</code> 中<br><code>export PATH=$PATH:$GOPATH/bin</code></p>
+</blockquote>
+<p>运行以下命令可以自动生成 go 文件</p>
+<pre><code class="hljs">protoc --go_out=plugins=grpc:. *.proto
+</code></pre>
+<h2 id="protoc-gen-grpc-java"><a href="#protoc-gen-grpc-java" class="headerlink" title="protoc-gen-grpc-java"></a>protoc-gen-grpc-java</h2><p>官方提供的 java 插件，安装下载地址 <a target="_blank" rel="noopener" href="https://github.com/grpc/grpc-java/tree/master/compiler">https://github.com/grpc/grpc-java/tree/master/compiler</a></p>
+<blockquote>
+<p>貌似系统 java 1.7 无法编译，应该需要更高的版本，或者下载已经编译好的工具，如 <a target="_blank" rel="noopener" href="https://repo1.maven.org/maven2/io/grpc/protoc-gen-grpc-java/1.19.0/">1.19</a></p>
+</blockquote>
+<p>运行以下命令自动生成 java 文件</p>
+<pre><code class="hljs">protoc --java_out=. *.proto
+protoc --plugin=protoc-gen-grpc-java=/xxx/xxx/protoc-gen-grpc-java --grpc-java_out=. *.proto
+</code></pre>
+<blockquote>
+<p>路径根据实际情况修改，java 至少需要 2 个文件</p>
+</blockquote>
+<h1 id="proto"><a href="#proto" class="headerlink" title="proto"></a>proto</h1><p>官方都有给简易例子，以下添加一些说明：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs proto">syntax = &quot;proto3&quot;;<br><br>option java_multiple_files = false;              // java 文件是否生成多个文件，我直接选择否方便 git 操作<br>option java_package = &quot;com.wishlily.helloworld&quot;; // java 路径<br>option java_outer_classname = &quot;HelloWorldProto&quot;; // java 类名<br><br>package grpc;                                    // golang 包名<br><br>// 通信接口<br>service Greeter &#123;<br>    rpc SayHello(Hello) returns (Null) &#123;&#125;       // 客户端给服务器信息<br>    rpc SayBye(Null) returns (stream Bye) &#123;&#125;    // 可用作服务器回调信息<br>&#125;<br><br>message Null &#123;&#125;             // 即便传输为空也需要一个构造，或者引入官方包中的 google.protobuf.Empty<br><br>message Hello &#123;<br>    string name = 1;<br>    string msg = 2;<br>    int64 num = 3;<br>&#125;<br><br>message Bye &#123;<br>    enum Number &#123;<br>        ONE = 0;<br>        TWO = 1;<br>    &#125;<br>    Number num = 1;<br>    string msg = 2;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="go"><a href="#go" class="headerlink" title="go"></a>go</h1><p>根据官方例子修改如下：</p>
+<h2 id="server"><a href="#server" class="headerlink" title="server"></a>server</h2><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br></pre></td><td class="code"><pre><code class="hljs golang"><span class="hljs-keyword">package</span> main<br><br><span class="hljs-keyword">import</span> (<br>	<span class="hljs-string">&quot;context&quot;</span><br>	<span class="hljs-string">&quot;fmt&quot;</span><br>	<span class="hljs-string">&quot;net&quot;</span><br>	<span class="hljs-string">&quot;time&quot;</span><br><br>	pb <span class="hljs-string">&quot;sayhi/grpc&quot;</span>          <span class="hljs-comment">// protoc-gen-go 生成文件包</span><br><br>	<span class="hljs-string">&quot;google.golang.org/grpc&quot;</span><br>)<br><br><span class="hljs-keyword">type</span> server <span class="hljs-keyword">struct</span> &#123;<br>	hi <span class="hljs-type">bool</span><br><br>	number <span class="hljs-type">int64</span><br>	name   <span class="hljs-type">string</span><br>	msg    <span class="hljs-type">string</span><br>&#125;<br><br><span class="hljs-comment">// 客户端 -&gt; 服务器</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(s *server)</span></span> SayHello(ctx context.Context, in *pb.Hello) (*pb.Null, <span class="hljs-type">error</span>) &#123;<br>	reply := &amp;pb.Null&#123;&#125;<br>	s.number = in.GetNum()<br>	s.name = in.GetName()<br>	s.msg = in.GetMsg()<br>	fmt.Printf(<span class="hljs-string">&quot;%d: %s Say %s\n&quot;</span>, s.number, s.name, s.msg)<br>	s.hi = <span class="hljs-literal">true</span><br>	<span class="hljs-keyword">return</span> reply, <span class="hljs-literal">nil</span><br>&#125;<br><br><span class="hljs-comment">// 服务器 -&gt; 客户端</span><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-params">(s *server)</span></span> SayBye(in *pb.Null, stream pb.Greeter_SayByeServer) <span class="hljs-type">error</span> &#123;<br>	<span class="hljs-keyword">for</span> &#123; <span class="hljs-comment">// 此处不退出，会一直在该线路上发送，哪怕连接已断，一定要判断 Send 结果</span><br>		<span class="hljs-keyword">if</span> s.hi &#123;<br>			bye := &amp;pb.Bye&#123;<br>				Msg: <span class="hljs-string">&quot;Receive: &quot;</span> + s.msg,<br>			&#125;<br>			<span class="hljs-keyword">if</span> (s.number % <span class="hljs-number">2</span>) == <span class="hljs-number">0</span> &#123;<br>				bye.Num = pb.Bye_ONE<br>			&#125; <span class="hljs-keyword">else</span> &#123;<br>				bye.Num = pb.Bye_TWO<br>			&#125;<br>			<span class="hljs-keyword">if</span> err := stream.Send(bye); err != <span class="hljs-literal">nil</span> &#123; <span class="hljs-comment">// 服务器主动发起消息</span><br>				<span class="hljs-keyword">return</span> err <span class="hljs-comment">// Disconnect</span><br>			&#125;<br>			s.hi = <span class="hljs-literal">false</span><br>		&#125; <span class="hljs-keyword">else</span> &#123;<br>			time.Sleep(<span class="hljs-number">100</span> * time.Millisecond)<br>		&#125;<br>	&#125;<br>&#125;<br><br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	lis, err := net.Listen(<span class="hljs-string">&quot;tcp&quot;</span>, <span class="hljs-string">&quot;localhost:10086&quot;</span>)<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-built_in">panic</span>(err)<br>	&#125;<br>	s := grpc.NewServer()<br>	pb.RegisterGreeterServer(s, <span class="hljs-built_in">new</span>(server))<br>	fmt.Println(<span class="hljs-string">&quot;Server start ...&quot;</span>)<br>	<span class="hljs-keyword">if</span> err := s.Serve(lis); err != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-built_in">panic</span>(err)<br>	&#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>开始接触 grpc 时一直想不明白，服务器怎么主动发起消息，后来明白其实就使用 stream，单方向就一直保持这个 stream 不关闭就行，当然这个连接还是要 client 先发起才行。</p>
+<h2 id="client"><a href="#client" class="headerlink" title="client"></a>client</h2><figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><code class="hljs golang"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> &#123;<br>	wait := <span class="hljs-built_in">make</span>(<span class="hljs-keyword">chan</span> <span class="hljs-type">int</span>, <span class="hljs-number">1</span>)<br><br>	conn, err := grpc.Dial(<span class="hljs-string">&quot;localhost:10086&quot;</span>, grpc.WithInsecure())<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-built_in">panic</span>(err)<br>	&#125;<br>	<span class="hljs-keyword">defer</span> conn.Close()<br>	c := pb.NewGreeterClient(conn)<br><br>	name := <span class="hljs-string">&quot;Robyn&quot;</span><br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(os.Args) &gt; <span class="hljs-number">1</span> &#123;<br>		name = os.Args[<span class="hljs-number">1</span>]<br>	&#125;<br>	msg := <span class="hljs-string">&quot;Hello&quot;</span><br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(os.Args) &gt; <span class="hljs-number">2</span> &#123;<br>		msg = os.Args[<span class="hljs-number">2</span>]<br>	&#125;<br>	num := <span class="hljs-type">int64</span>(<span class="hljs-number">120</span>)<br>	<span class="hljs-keyword">if</span> <span class="hljs-built_in">len</span>(os.Args) &gt; <span class="hljs-number">3</span> &#123;<br>		n, _ := strconv.Atoi(os.Args[<span class="hljs-number">3</span>])<br>		num = <span class="hljs-type">int64</span>(n)<br>	&#125;<br><br>	ctx, cancel := context.WithTimeout(context.Background(), time.Second)<br>	<span class="hljs-keyword">defer</span> cancel()<br>	_, err = c.SayHello(ctx, &amp;pb.Hello&#123;Name: name, Msg: msg, Num: num&#125;)<br>	<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>		<span class="hljs-built_in">panic</span>(err)<br>	&#125;<br>	fmt.Printf(<span class="hljs-string">&quot;%d: %s Say %s\n&quot;</span>, num, name, msg)<br><br>	<span class="hljs-keyword">go</span> <span class="hljs-function"><span class="hljs-keyword">func</span><span class="hljs-params">()</span></span> &#123;<br>		ctx, cancel := context.WithTimeout(context.Background(), time.Second)<br>		<span class="hljs-keyword">defer</span> cancel()<br>		stream, err := c.SayBye(ctx, &amp;pb.Null&#123;&#125;)<br>		<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>			<span class="hljs-built_in">panic</span>(err)<br>		&#125;<br>		<span class="hljs-keyword">for</span> &#123;<br>			bye, err := stream.Recv()<br>			<span class="hljs-keyword">if</span> err == io.EOF &#123;<br>				<span class="hljs-keyword">break</span><br>			&#125;<br>			<span class="hljs-keyword">if</span> err != <span class="hljs-literal">nil</span> &#123;<br>				<span class="hljs-built_in">panic</span>(err)<br>			&#125;<br>			fmt.Printf(<span class="hljs-string">&quot;Say Bye %v %v\n&quot;</span>, bye.GetNum(), bye.GetMsg())<br>			<span class="hljs-keyword">break</span><br>		&#125;<br>		wait &lt;- <span class="hljs-number">0</span><br>	&#125;()<br><br>	&lt;-wait<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="demo"><a href="#demo" class="headerlink" title="demo"></a>demo</h2><p>测试结果如下：</p>
+<p>client</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs inform7"><span class="hljs-comment">[root@localhost client]</span># go run main.go<br><span class="hljs-keyword">Say</span> Bye ONE:Receive: Hello<br>120: Robyn <span class="hljs-keyword">Say</span> Hello<br><span class="hljs-comment">[root@localhost client]</span># go run main.go Emily Hi 23<br><span class="hljs-keyword">Say</span> Bye TWO Receive: Hi<br>23: Emily <span class="hljs-keyword">Say</span> Hi<br></code></pre></td></tr></table></figure>
+
+<p>server</p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs inform7"><span class="hljs-comment">[root@localhost server]</span># go run main.go<br>Server start ...<br>120: Robyn <span class="hljs-keyword">Say</span> Hello<br>23: Emily <span class="hljs-keyword">Say</span> Hi<br></code></pre></td></tr></table></figure>
+
+<h1 id="java"><a href="#java" class="headerlink" title="java"></a>java</h1><p>首先介绍打包方式：一种是使用 maven，另一种是使用 ant。</p>
+<p>maven 这部分根据官方<a target="_blank" rel="noopener" href="https://github.com/grpc/grpc-java/blob/master/examples/pom.xml">例子</a>摘抄</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">properties</span>&gt;</span><br>	...<br>	<span class="hljs-tag">&lt;<span class="hljs-name">grpc.version</span>&gt;</span>1.19.0<span class="hljs-tag">&lt;/<span class="hljs-name">grpc.version</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">properties</span>&gt;</span><br><br><span class="hljs-tag">&lt;<span class="hljs-name">dependencyManagement</span>&gt;</span><br>	<span class="hljs-tag">&lt;<span class="hljs-name">dependencies</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>			<span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>io.grpc<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>			<span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>grpc-bom<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br>			<span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>$&#123;grpc.version&#125;<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span><br>			<span class="hljs-tag">&lt;<span class="hljs-name">type</span>&gt;</span>pom<span class="hljs-tag">&lt;/<span class="hljs-name">type</span>&gt;</span><br>			<span class="hljs-tag">&lt;<span class="hljs-name">scope</span>&gt;</span>import<span class="hljs-tag">&lt;/<span class="hljs-name">scope</span>&gt;</span><br>		<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br>	<span class="hljs-tag">&lt;/<span class="hljs-name">dependencies</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">dependencyManagement</span>&gt;</span><br><br><span class="hljs-tag">&lt;<span class="hljs-name">dependencies</span>&gt;</span><br>	<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>io.grpc<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>grpc-netty-shaded<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">scope</span>&gt;</span>runtime<span class="hljs-tag">&lt;/<span class="hljs-name">scope</span>&gt;</span><br>	<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br>	<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>io.grpc<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>grpc-protobuf<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br>	<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br>	<span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>io.grpc<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>grpc-stub<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span><br>	<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">dependencies</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>ant 就需要提前下载好 jar 包，将这些一起打包到你的包里：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">target</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;client&quot;</span> <span class="hljs-attr">depends</span>=<span class="hljs-string">&quot;compile&quot;</span>&gt;</span><br>	<span class="hljs-tag">&lt;<span class="hljs-name">mkdir</span> <span class="hljs-attr">dir</span>=<span class="hljs-string">&quot;$&#123;prepjar&#125;&quot;</span> /&gt;</span><br>	<span class="hljs-tag">&lt;<span class="hljs-name">copy</span> <span class="hljs-attr">todir</span>=<span class="hljs-string">&quot;$&#123;prepjar&#125;&quot;</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">fileset</span> <span class="hljs-attr">dir</span>=<span class="hljs-string">&quot;$&#123;classes&#125;&quot;</span>/&gt;</span><br>	<span class="hljs-tag">&lt;/<span class="hljs-name">copy</span>&gt;</span><br>	<span class="hljs-tag">&lt;<span class="hljs-name">jar</span> <span class="hljs-attr">jarfile</span>=<span class="hljs-string">&quot;$&#123;clientjarfilename&#125;&quot;</span> <span class="hljs-attr">basedir</span>=<span class="hljs-string">&quot;$&#123;prepjar&#125;&quot;</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">manifest</span>&gt;</span><br>			<span class="hljs-tag">&lt;<span class="hljs-name">attribute</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;Main-Class&quot;</span> <span class="hljs-attr">value</span>=<span class="hljs-string">&quot;com.xxx.MainClass&quot;</span> /&gt;</span><br>		<span class="hljs-tag">&lt;/<span class="hljs-name">manifest</span>&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">exclude</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;**/xxx/**&quot;</span>/&gt;</span><br>		<span class="hljs-tag">&lt;<span class="hljs-name">zipgroupfileset</span> <span class="hljs-attr">dir</span>=<span class="hljs-string">&quot;$&#123;grpc&#125;&quot;</span> <span class="hljs-attr">includes</span>=<span class="hljs-string">&quot;**/*.jar&quot;</span> /&gt;</span> <span class="hljs-comment">&lt;!-- 主要这句拷贝路径下所有 jar --&gt;</span><br>	<span class="hljs-tag">&lt;/<span class="hljs-name">jar</span>&gt;</span><br>	<span class="hljs-tag">&lt;<span class="hljs-name">delete</span> <span class="hljs-attr">dir</span>=<span class="hljs-string">&quot;$&#123;prepjar&#125;&quot;</span> /&gt;</span><br><span class="hljs-tag">&lt;/<span class="hljs-name">target</span>&gt;</span><br></code></pre></td></tr></table></figure>
+
+<h2 id="server-1"><a href="#server-1" class="headerlink" title="server"></a>server</h2><p>服务器首先使用 <code>protoc</code> 工具生成两个文件：<code>GreeterGrpc.java</code> &amp; <code>HelloWorldProto.java</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Server</span> &#123;<br>    <span class="hljs-keyword">private</span> io.grpc.Server server;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">start</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> IOException &#123;<br>        <span class="hljs-type">int</span> <span class="hljs-variable">port</span> <span class="hljs-operator">=</span> <span class="hljs-number">10086</span>;<br>        server = ServerBuilder.forPort(port).addService(<span class="hljs-keyword">new</span> <span class="hljs-title class_">GreeterImpl</span>()).build().start();<br>        System.out.println(<span class="hljs-string">&quot;Server started, listening on 10086&quot;</span>);<br>        Runtime.getRuntime().addShutdownHook(<span class="hljs-keyword">new</span> <span class="hljs-title class_">Thread</span>() &#123;<br>            <span class="hljs-meta">@Override</span><br>            <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">run</span><span class="hljs-params">()</span> &#123;<br>                <span class="hljs-comment">// Use stderr here since the logger may have been reset by its JVM shutdown</span><br>                <span class="hljs-comment">// hook.</span><br>                System.err.println(<span class="hljs-string">&quot;*** shutting down gRPC server since JVM is shutting down&quot;</span>);<br>                Server.<span class="hljs-built_in">this</span>.stop();<br>                System.err.println(<span class="hljs-string">&quot;*** server shut down&quot;</span>);<br>            &#125;<br>        &#125;);<br>    &#125;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">stop</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">if</span> (server != <span class="hljs-literal">null</span>) &#123;<br>            server.shutdown();<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">blockUntilShutdown</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> InterruptedException &#123;<br>        <span class="hljs-keyword">if</span> (server != <span class="hljs-literal">null</span>) &#123;<br>            server.awaitTermination();<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">static</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">GreeterImpl</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">GreeterImplBase</span> &#123;<br>        <span class="hljs-keyword">private</span> <span class="hljs-type">boolean</span> <span class="hljs-variable">sayHi</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span>;<br>        <span class="hljs-keyword">private</span> Bye bye;<br><br>        <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">sayHello</span><span class="hljs-params">(Hello req, StreamObserver&lt;Null&gt; responseObserver)</span> &#123;<br>            <span class="hljs-type">Null</span> <span class="hljs-variable">reply</span> <span class="hljs-operator">=</span> Null.newBuilder().build();<br><br>            <span class="hljs-type">Number</span> <span class="hljs-variable">num</span> <span class="hljs-operator">=</span> Number.ONE;<br>            <span class="hljs-keyword">if</span> (req.getNum() % <span class="hljs-number">2</span> == <span class="hljs-number">1</span>) &#123;<br>                num = Number.TWO;<br>            &#125;<br>            <span class="hljs-type">String</span> <span class="hljs-variable">name</span> <span class="hljs-operator">=</span> req.getName();<br>            <span class="hljs-type">String</span> <span class="hljs-variable">msg</span> <span class="hljs-operator">=</span> req.getMsg();<br>            System.out.printf(<span class="hljs-string">&quot;%d: %s Say %s\n&quot;</span>, req.getNum(), name, msg);<br>            bye = Bye.newBuilder().setNum(num).setMsg(<span class="hljs-string">&quot;Get: &quot;</span> + msg).build();<br>            responseObserver.onNext(reply);<br>            responseObserver.onCompleted();<br>            sayHi = <span class="hljs-literal">true</span>;<br>        &#125;<br><br>        <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">sayBye</span><span class="hljs-params">(Null req, StreamObserver&lt;Bye&gt; responseObserver)</span> &#123;<br>            <span class="hljs-keyword">while</span> (<span class="hljs-literal">true</span>) &#123;<br>                <span class="hljs-keyword">if</span> (sayHi) &#123;<br>                    sayHi = <span class="hljs-literal">false</span>;<br>                    System.out.printf(<span class="hljs-string">&quot;%s Bye %s\n&quot;</span>, bye.getNum(), bye.getMsg());<br>                    <span class="hljs-keyword">try</span> &#123;<br>                        responseObserver.onNext(bye);<br>                    &#125; <span class="hljs-keyword">catch</span> (StatusRuntimeException e) &#123; <span class="hljs-comment">// 是 grpc 出现错误时抛出异常</span><br>                        System.out.println(e.toString());<br>                        responseObserver.onError(e);     <span class="hljs-comment">// 测试中如果没有 onError | onCompleted，则下一次连接会出现问题</span><br>                        <span class="hljs-keyword">break</span>;<br>                    &#125;<br>                &#125; <span class="hljs-keyword">else</span> &#123;<br>                    <span class="hljs-keyword">try</span> &#123;<br>                        Thread.sleep(<span class="hljs-number">1000</span>);<br>                    &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>                    &#125;<br>                &#125;<br>            &#125;<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> IOException, InterruptedException &#123;<br>        <span class="hljs-keyword">final</span> <span class="hljs-type">Server</span> <span class="hljs-variable">server</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Server</span>();<br>        server.start();<br>        server.blockUntilShutdown();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="client-1"><a href="#client-1" class="headerlink" title="client"></a>client</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Client</span> &#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> ManagedChannel channel;<br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">final</span> GreeterGrpc.GreeterBlockingStub blockingStub;<br><br>    <span class="hljs-keyword">private</span> ByeListenThread byeListenThread;<br><br>    <span class="hljs-comment">/** Construct client for accessing RouteGuide server at &#123;<span class="hljs-doctag">@code</span> host:port&#125;. */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">Client</span><span class="hljs-params">(String host, <span class="hljs-type">int</span> port)</span> &#123;<br>        <span class="hljs-built_in">this</span>(ManagedChannelBuilder.forAddress(host, port).usePlaintext());<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * Construct client for accessing RouteGuide server using the existing channel.</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">Client</span><span class="hljs-params">(ManagedChannelBuilder&lt;?&gt; channelBuilder)</span> &#123;<br>        channel = channelBuilder.build();<br>        blockingStub = GreeterGrpc.newBlockingStub(channel);<br><br>        byeListenThread = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ByeListenThread</span>();<br>        byeListenThread.setName(<span class="hljs-string">&quot;Client_ByeListenThread&quot;</span>);<br>        byeListenThread.setDaemon(<span class="hljs-literal">true</span>);<br>        byeListenThread.start();<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">shutdown</span><span class="hljs-params">()</span> <span class="hljs-keyword">throws</span> InterruptedException &#123;<br>        channel.shutdown().awaitTermination(<span class="hljs-number">5</span>, TimeUnit.SECONDS);<br>        byeListenThread.cancel();<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">sayHello</span><span class="hljs-params">(String name, String msg, <span class="hljs-type">int</span> num)</span> &#123;<br>        HelloWorldProto.<span class="hljs-type">Hello</span> <span class="hljs-variable">request</span> <span class="hljs-operator">=</span> HelloWorldProto.Hello.newBuilder().setName(name).setMsg(msg).setNum(num)<br>                .build();<br>        blockingStub.sayHello(request);<br>        System.out.printf(<span class="hljs-string">&quot;%d: %s Say %s\n&quot;</span>, num, name, msg);<br>    &#125;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ByeListenThread</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">Thread</span> &#123;<br>        <span class="hljs-keyword">private</span> <span class="hljs-keyword">volatile</span> <span class="hljs-type">boolean</span> <span class="hljs-variable">isAlive</span> <span class="hljs-operator">=</span> <span class="hljs-literal">false</span>;<br>        HelloWorldProto.<span class="hljs-type">Null</span> <span class="hljs-variable">request</span> <span class="hljs-operator">=</span> HelloWorldProto.Null.newBuilder().build();<br><br>        <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">run</span><span class="hljs-params">()</span> &#123;<br>            Iterator&lt;HelloWorldProto.Bye&gt; bye;<br>            <span class="hljs-keyword">while</span> (isAlive) &#123;<br>                bye = blockingStub.sayBye(request);<br>                <span class="hljs-keyword">while</span> (bye.hasNext()) &#123; <span class="hljs-comment">// block</span><br>                    HelloWorldProto.<span class="hljs-type">Bye</span> <span class="hljs-variable">data</span> <span class="hljs-operator">=</span> bye.next();<br>                    <span class="hljs-comment">// if data have ptr part, hasXXX check</span><br>                    System.out.printf(<span class="hljs-string">&quot;Bye %s: %s\n&quot;</span>, data.getNum(), data.getMsg());<br>                &#125;<br>            &#125;<br>        &#125;<br><br>        <span class="hljs-keyword">public</span> <span class="hljs-keyword">synchronized</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">start</span><span class="hljs-params">()</span> &#123;<br>            isAlive = <span class="hljs-literal">true</span>;<br>            <span class="hljs-built_in">super</span>.start();<br>        &#125;<br><br>        <span class="hljs-keyword">public</span> <span class="hljs-keyword">synchronized</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">cancel</span><span class="hljs-params">()</span> &#123;<br>            isAlive = <span class="hljs-literal">false</span>;<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> <span class="hljs-keyword">throws</span> IOException, InterruptedException &#123;<br>        <span class="hljs-type">Client</span> <span class="hljs-variable">c</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Client</span>(<span class="hljs-string">&quot;127.0.0.1&quot;</span>, <span class="hljs-number">10086</span>);<br><br>        <span class="hljs-type">String</span> <span class="hljs-variable">name</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;Java&quot;</span>;<br>        <span class="hljs-keyword">if</span> (args.length &gt; <span class="hljs-number">0</span>) &#123;<br>            name = args[<span class="hljs-number">0</span>];<br>        &#125;<br>        <span class="hljs-type">String</span> <span class="hljs-variable">msg</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;hello&quot;</span>;<br>        <span class="hljs-keyword">if</span> (args.length &gt; <span class="hljs-number">1</span>) &#123;<br>            msg = args[<span class="hljs-number">1</span>];<br>        &#125;<br>        <span class="hljs-type">int</span> <span class="hljs-variable">num</span> <span class="hljs-operator">=</span> <span class="hljs-number">2046</span>;<br>        <span class="hljs-keyword">if</span> (args.length &gt; <span class="hljs-number">2</span>) &#123;<br>            num = Integer.parseInt(args[<span class="hljs-number">2</span>]);<br>        &#125;<br><br>        c.sayHello(name, msg, num);<br>        <span class="hljs-comment">// wait</span><br>        System.out.println(<span class="hljs-string">&quot;wait ...&quot;</span>);<br>        <span class="hljs-type">InputStreamReader</span> <span class="hljs-variable">is_reader</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">InputStreamReader</span>(System.in);<br>        <span class="hljs-type">String</span> <span class="hljs-variable">str</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">BufferedReader</span>(is_reader).readLine();<br>        c.shutdown();<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="demo-1"><a href="#demo-1" class="headerlink" title="demo"></a>demo</h2><p>和 golang 一样而且可以交叉测试，不过 go client &amp; java server 会有超时错误，没有详细查看。</p>
+<div id="footnotes"><hr><div id="footnotelist"><ol style="list-style:none; padding-left: 0;"><li id="fn:1"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">1.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/a94673ad10dc">golang安装gRpc</a></span><a href="#fnref:1" rev="footnote"> ↩</a></li></ol></div></div>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/bus/" class="category-chain-item">bus</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/grpc/">#grpc</a>
+      
+        <a href="/tags/go/">#go</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>grpc</div>
+      <div>https://wishlily.github.io/article/bus/2019/06/09/grpc/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Wishlily</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2019年6月9日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/article/tools/2019/06/13/VSCode/" title="VSCode">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">VSCode</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/article/code/2018/09/29/react-component-communication/" title="react 组件通信">
+                        <span class="hidden-mobile">react 组件通信</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#gitalk-container', function() {
+      Fluid.utils.createCssLink('/css/gitalk.css')
+      Fluid.utils.createScript('https://lib.baomitu.com/gitalk/1.8.0/gitalk.min.js', function() {
+        var options = Object.assign(
+          {"clientID":"b3260d026e43480823e3","clientSecret":"68e9726e48be759ac999ffa180da72c5e29c90e5","repo":"wishlily.github.io","owner":"wishlily","admin":["wishlily"],"language":"zh-CN","labels":["Gitalk"],"perPage":10,"pagerDirection":"last","distractionFreeMode":false,"createIssueManually":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token"},
+          {
+            id: 'f0e50478de74fbd59af68b9b3682d433'
+          }
+        )
+        var gitalk = new Gitalk(options);
+        gitalk.render('gitalk-container');
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

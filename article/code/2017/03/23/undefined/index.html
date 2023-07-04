@@ -1,0 +1,816 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/images/apple-touch-icon.png">
+  <link rel="icon" href="/images/favicon-32x32.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Wishlily">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="使用 golang 绘制一个朱利亚集合图像。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Julia集">
+<meta property="og:url" content="https://wishlily.github.io/article/code/2017/03/23/undefined/index.html">
+<meta property="og:site_name" content="Wishlily&#39;s blog">
+<meta property="og:description" content="使用 golang 绘制一个朱利亚集合图像。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/23/undefined/positive_negative_rotation.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/23/undefined/a_plus_bi.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_1.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_2.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_3.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_4.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_5.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_6.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_7.png">
+<meta property="og:image" content="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_8.png">
+<meta property="article:published_time" content="2017-03-23T09:32:51.000Z">
+<meta property="article:modified_time" content="2017-03-23T09:32:51.000Z">
+<meta property="article:author" content="Wishlily">
+<meta property="article:tag" content="golang">
+<meta property="article:tag" content="draw">
+<meta property="article:tag" content="分形">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://wishlily.github.io/images/article/code/2017/03/23/undefined/positive_negative_rotation.png">
+  
+  
+  
+  <title>Julia集 - Wishlily&#39;s blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"wishlily.github.io","root":"/","version":"1.9.4","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/images/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":null,"gtag":"G-R4ZHVCJLGY","tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+    <!-- Google gtag.js -->
+    <script async>
+      if (!Fluid.ctx.dnt) {
+        Fluid.utils.createScript('https://www.googletagmanager.com/gtag/js?id=G-R4ZHVCJLGY', function() {
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-R4ZHVCJLGY');
+        });
+      }
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"><link rel="alternate" href="/atom.xml" title="Wishlily's blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Wishlily&#39;s blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/images/banner.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Julia集"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2017-03-23 17:32" pubdate>
+          2017年3月23日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          17 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Julia集</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>使用 golang 绘制一个朱利亚集合图像。</p>
+<span id="more"></span>
+
+<h1 id="朱利亚集合"><a href="#朱利亚集合" class="headerlink" title="朱利亚集合"></a>朱利亚集合</h1><p>朱利亚集合（Julia Set）是在复平面上点的集合，所以可以使用二维平面绘制出来。</p>
+<h2 id="定义1"><a href="#定义1" class="headerlink" title="定义1"></a>定义<sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></h2><p>朱利亚集合可以由下式进行反复迭代得到：<br>$$ f_c(z) &#x3D; z^2 + c $$<br>对于固定的复数 c，取某一 z 值（如 $z_0$），可以得到序列：<br>$$ z_0, f_c(z_0), f_c(f_c(z_0)), f_c(f_c(f_c(z_0))), \ldots $$<br>这一序列可能发散于无穷大或始终处于某一范围之内并收敛于某一值。<br>我们将使其不扩散的 z 值的集合称为朱利亚集合。</p>
+<h2 id="理解"><a href="#理解" class="headerlink" title="理解"></a>理解</h2><ul>
+<li>点的集合</li>
+<li>满足 $f_c(z)$ 序列收敛的集合（之前我以为是序列的集合）</li>
+<li>直观上使函数不发散的范围应该是：<br>\begin{cases}<br>  z &#x3D; a + bi &amp; a,b&#x3D;(-1,1)\\<br>  c &#x3D; d + ei &amp; d,e&#x3D;(-1,1)<br>\end{cases}</li>
+<li>判断点是否趋于收敛条件<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>是 $|z|&lt;2$</li>
+</ul>
+<h1 id="复数"><a href="#复数" class="headerlink" title="复数"></a>复数</h1><h2 id="运算法则3"><a href="#运算法则3" class="headerlink" title="运算法则3"></a>运算法则<sup id="fnref:3"><a href="#fn:3" rel="footnote">3</a></sup></h2><ol>
+<li>加减法<br>$$<br>(a+bi)+(c+di)&#x3D;(a+c)+(b+d)i \\<br>(a+bi)-(c+di)&#x3D;(a-c)+(b-d)i<br>$$</li>
+<li>乘除法<br>$$<br>(a+bi)(c+di)&#x3D;(ac-bd)+(bc+ad)i \\<br>\frac{a+bi}{c+di}&#x3D;\frac{ac+bd}{c^2+d^2}+\frac{bc-ad}{c^2+d^2}i<br>$$</li>
+</ol>
+<h2 id="理解-1"><a href="#理解-1" class="headerlink" title="理解"></a>理解</h2><p>虚数 $i$ 可以理解为一个旋转量（逆时针 90 度）<sup id="fnref:4"><a href="#fn:4" rel="footnote">4</a></sup><br><img src="https://wishlily.github.io/images/article/code/2017/03/23/undefined/positive_negative_rotation.png" srcset="/images/loading.gif" lazyload></p>
+<blockquote>
+<p>图片出自<sup id="fnref:5"><a href="#fn:5" rel="footnote">5</a></sup></p>
+</blockquote>
+<p>复数包含实部和虚部，也就是长度和旋转量，所以可以用二维平面表示。<br><img src="https://wishlily.github.io/images/article/code/2017/03/23/undefined/a_plus_bi.png" srcset="/images/loading.gif" lazyload></p>
+<blockquote>
+<p>图片出自<sup id="fnref:5"><a href="#fn:5" rel="footnote">5</a></sup></p>
+</blockquote>
+<h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><p>根据复数乘法法则可得到 $f_c(z)$ 函数如下计算，返回新的 $z$ 值。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">julia_fc</span><span class="hljs-params">(zx, zy, cx, cy <span class="hljs-type">float64</span>)</span></span> (<span class="hljs-type">float64</span>, <span class="hljs-type">float64</span>) &#123;<br>    z_x := zx*zx - zy*zy + cx<br>    z_y := <span class="hljs-number">2</span>*zx*zy + cy<br>    <span class="hljs-keyword">return</span> z_x, z_y<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>迭代 n 次保证 $z$ 值在一定范围内，迭代次数越多（收敛）则点的灰度越小（即暗），迭代次数越少（发散）则点的灰度越大（即亮）。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-keyword">const</span> (<br>    _JULIA_R = <span class="hljs-number">2.0</span><br>)<br><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">julia_divergent_grey</span><span class="hljs-params">(zx, zy, cx, cy <span class="hljs-type">float64</span>)</span></span> <span class="hljs-type">int</span> &#123;<br>    <span class="hljs-keyword">for</span> i := <span class="hljs-number">255</span>; i &gt;= <span class="hljs-number">0</span>; i -= <span class="hljs-number">3</span> &#123;<br>        zx, zy = julia_fc(zx, zy, cx, cy)<br>        <span class="hljs-keyword">if</span> math.Sqrt(zx*zx+zy*zy) &gt; _JULIA_R &#123;<br>            <span class="hljs-keyword">return</span> i<br>        &#125;<br>    &#125;<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>因为真实的图像坐标是正整数，而 Julia 集收敛坐标在 [-1,1] 之间，所以计算时需要进行一次坐标变换。<br>最终绘图函数如下，复数 $c$ 值为每次调用随机生成。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">julia</span><span class="hljs-params">(img *image.RGBA, limit <span class="hljs-type">int</span>)</span></span> &#123;<br>    s := rand.NewSource(time.Now().Unix())<br>    r := rand.New(s)<br><br>    <span class="hljs-comment">// c = [0, 1]</span><br>    cx := r.Float64()*<span class="hljs-number">2</span> - <span class="hljs-number">1</span><br>    cy := r.Float64()*<span class="hljs-number">2</span> - <span class="hljs-number">1</span><br>    fmt.Println(cx, cy)<br><br>    <span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; limit; i++ &#123;<br>        zx := <span class="hljs-type">float64</span>(<span class="hljs-number">4</span>*i)/<span class="hljs-type">float64</span>(limit) - _JULIA_R<br>        <span class="hljs-keyword">for</span> j := <span class="hljs-number">0</span>; j &lt; limit; j++ &#123;<br>            zy := <span class="hljs-type">float64</span>(<span class="hljs-number">4</span>*j)/<span class="hljs-type">float64</span>(limit) - _JULIA_R<br>            gray := <span class="hljs-type">uint8</span>(julia_divergent_grey(zx, zy, cx, cy))<br>            point(img, i, j, color.Gray&#123;gray&#125;)<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs go"><span class="hljs-function"><span class="hljs-keyword">func</span> <span class="hljs-title">Test_julia</span><span class="hljs-params">(t *testing.T)</span></span> &#123;<br>    <span class="hljs-keyword">const</span> r = <span class="hljs-number">1000</span><br>    img := image.NewRGBA(image.Rect(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, r, r))<br>    julia(img, r)<br>    f, _ := os.OpenFile(<span class="hljs-string">&quot;julia.png&quot;</span>, os.O_WRONLY|os.O_CREATE, <span class="hljs-number">0600</span>)<br>    <span class="hljs-keyword">defer</span> f.Close()<br>    png.Encode(f, img)<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>生成一些好看的图像：</p>
+<p><img src="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_1.png" srcset="/images/loading.gif" lazyload><br><img src="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_2.png" srcset="/images/loading.gif" lazyload><br><img src="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_3.png" srcset="/images/loading.gif" lazyload><br><img src="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_4.png" srcset="/images/loading.gif" lazyload><br><img src="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_5.png" srcset="/images/loading.gif" lazyload><br><img src="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_6.png" srcset="/images/loading.gif" lazyload><br><img src="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_7.png" srcset="/images/loading.gif" lazyload><br><img src="https://wishlily.github.io/images/article/code/2017/03/23/undefined/julia_8.png" srcset="/images/loading.gif" lazyload></p>
+<p>停不下来了 …⁄(⁄ ⁄•⁄ω⁄•⁄ ⁄)⁄….</p>
+<div id="footnotes"><hr><div id="footnotelist"><ol style="list-style:none; padding-left: 0;"><li id="fn:1"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">1.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%9C%B1%E5%88%A9%E4%BA%9A%E9%9B%86%E5%90%88">维基百科：朱利亚集合</a></span><a href="#fnref:1" rev="footnote"> ↩</a></li><li id="fn:2"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">2.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="http://www.matrix67.com/blog/archives/292">神奇的分形艺术（四）：Julia集和Mandelbrot集</a></span><a href="#fnref:2" rev="footnote"> ↩</a></li><li id="fn:3"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">3.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="http://baike.baidu.com/item/%E5%A4%8D%E6%95%B0%E8%BF%90%E7%AE%97%E6%B3%95%E5%88%99">百度百科：复数运算法则</a></span><a href="#fnref:3" rev="footnote"> ↩</a></li><li id="fn:4"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">4.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2012/09/imaginary_number.html">虚数的意义</a></span><a href="#fnref:4" rev="footnote"> ↩</a></li><li id="fn:5"><span style="display: inline-block; vertical-align: top; padding-right: 10px;">5.</span><span style="display: inline-block; vertical-align: top;"><a target="_blank" rel="noopener" href="https://betterexplained.com/articles/a-visual-intuitive-guide-to-imaginary-numbers/">A Visual, Intuitive Guide to Imaginary Numbers</a></span><a href="#fnref:5" rev="footnote"> ↩</a></li></ol></div></div>
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/code/" class="category-chain-item">code</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/golang/">#golang</a>
+      
+        <a href="/tags/draw/">#draw</a>
+      
+        <a href="/tags/%E5%88%86%E5%BD%A2/">#分形</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Julia集</div>
+      <div>https://wishlily.github.io/article/code/2017/03/23/undefined/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Wishlily</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2017年3月23日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="NC - 非商业性使用">
+                    <i class="iconfont icon-nc"></i>
+                  </span>
+                </a>
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="SA - 相同方式共享">
+                    <i class="iconfont icon-sa"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/article/code/2017/03/27/undefined/" title="Mandelbrot集">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Mandelbrot集</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/article/code/2017/03/21/undefined/" title="Koch">
+                        <span class="hidden-mobile">Koch</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <div id="gitalk-container"></div>
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#gitalk-container', function() {
+      Fluid.utils.createCssLink('/css/gitalk.css')
+      Fluid.utils.createScript('https://lib.baomitu.com/gitalk/1.8.0/gitalk.min.js', function() {
+        var options = Object.assign(
+          {"clientID":"b3260d026e43480823e3","clientSecret":"68e9726e48be759ac999ffa180da72c5e29c90e5","repo":"wishlily.github.io","owner":"wishlily","admin":["wishlily"],"language":"zh-CN","labels":["Gitalk"],"perPage":10,"pagerDirection":"last","distractionFreeMode":false,"createIssueManually":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token"},
+          {
+            id: 'ae419af61d1a2e59cb0910f5e5966a69'
+          }
+        )
+        var gitalk = new Gitalk(options);
+        gitalk.render('gitalk-container');
+      });
+    });
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
