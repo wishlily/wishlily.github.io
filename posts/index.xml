@@ -1,0 +1,35 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>所有文章 - Wishlily's blog</title><link>https://wishlily.github.io/posts/</link><description>所有文章 | Wishlily's blog</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 17 Sep 2020 15:30:00 +0000</lastBuildDate><atom:link href="https://wishlily.github.io/posts/" rel="self" type="application/rss+xml"/><item><title>VBox 镜像迁移 QEMU</title><link>https://wishlily.github.io/article/2020/09/17/vbox-img-to-qemu/</link><pubDate>Thu, 17 Sep 2020 15:30:00 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2020/09/17/vbox-img-to-qemu/</guid><description>&lt;p>电脑重装不想再安装 vbox，试试 qume 能不能使用原来的镜像。&lt;/p></description></item><item><title>JUnit 测试之邪门歪道</title><link>https://wishlily.github.io/article/2020/09/15/junit-test/</link><pubDate>Tue, 15 Sep 2020 10:13:00 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2020/09/15/junit-test/</guid><description>&lt;p>Java 单元测试一般使用 JUnit，但是总有些接口测试不便，需要特殊操作，当然可能如下方法并不被提倡，只作不时之需。&lt;/p></description></item><item><title>Too Many Open files</title><link>https://wishlily.github.io/article/2020/04/19/too-many-open-files/</link><pubDate>Sun, 19 Apr 2020 11:22:42 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2020/04/19/too-many-open-files/</guid><description><![CDATA[<p>最近发现了一个历史 bug，挺有意思，记录一下。</p>
+<p>环境：JDK7<br>
+系统：CentOS<br>
+现象：长时间运行后程序无响应</p>
+<p>开始我怀疑是不是哪里死锁了，找了一圈也没有发现问题；<br>
+后来再次出现该问题时尝试使用 jstack 查看当前状态，然而出现以下信息：</p>]]></description></item><item><title>Docker 使用</title><link>https://wishlily.github.io/article/2019/08/14/docker-apply/</link><pubDate>Wed, 14 Aug 2019 11:40:35 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2019/08/14/docker-apply/</guid><description><![CDATA[<p>Docker 前几年为了配置数据库接触过一次，仅限于 <code>run</code> &amp; <code>start</code> 之类。<br>
+今天详细看看官方文档，记录一下。</p>]]></description></item><item><title>VSCode</title><link>https://wishlily.github.io/article/2019/06/13/vscode/</link><pubDate>Thu, 13 Jun 2019 11:11:19 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2019/06/13/vscode/</guid><description>&lt;p>从 Sublime 投入 VSCode 怀抱。&lt;br>
+自己一些常用插件配置。&lt;/p></description></item><item><title>grpc</title><link>https://wishlily.github.io/article/2019/06/09/grpc/</link><pubDate>Sun, 09 Jun 2019 14:01:02 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2019/06/09/grpc/</guid><description>&lt;p>最近使用了一下 grpc 通信，现在整理一下，防止遗忘。&lt;/p></description></item><item><title>react 组件通信</title><link>https://wishlily.github.io/article/2018/09/29/react-component-communication/</link><pubDate>Sat, 29 Sep 2018 14:59:26 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2018/09/29/react-component-communication/</guid><description>&lt;p>react 使用一些心得记录。&lt;/p></description></item><item><title>RFID：ISO14443A</title><link>https://wishlily.github.io/article/2018/05/18/rfid-iso14443a/</link><pubDate>Fri, 18 May 2018 14:43:30 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2018/05/18/rfid-iso14443a/</guid><description><![CDATA[<p>这是篇几年前总结的文档，现在重新整理一下。<br>
+首先建议看下《<a href="http://bbs.21ic.com/blog-15467-89510.html" target="_blank" rel="noopener noreffer ">看得懂的 RFID 原理</a>》这篇文章，当初找了不少资料就这篇让我明白了些 RFID 是怎么通信的。</p>
+<p>ISO14443A 是常见的协议标准，大致如下：</p>
+<p>载波频率 f：13.56MHz<br>
+数据传输率：13.56MHz/128 = 106Kbit/s<br>
+普通卡 PICC UID：</p>
+<ul>
+<li>4 个字节 32 位数据</li>
+<li>7 个字节</li>
+<li>10 个字节</li>
+</ul>
+<p>各部分协议内容：</p>
+<ol>
+<li>ISO/IEC 14443-1 制定了 PICC 的物理特性</li>
+<li>ISO/IEC 14443-2 制定了射频功率及信号界面特性</li>
+<li>ISO/IEC 14443-3 PICC 初始化和防冲突机制</li>
+<li>ISO/IEC 14443-4 有关交易的协定</li>
+</ol>
+<p>以下通过读卡器读卡来理解该协议，其中缩写表示如下：<br>
+PICC：普通卡（M1 卡）<br>
+PCD：读卡器（PN512）</p>]]></description></item><item><title>博客图床</title><link>https://wishlily.github.io/article/2018/05/15/figure-bed/</link><pubDate>Tue, 15 May 2018 04:04:03 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2018/05/15/figure-bed/</guid><description><![CDATA[<p>原来我的博客使用七牛作为图床，速度挺快但是无法免费使用 https，就想着更换一个图床（其实就是不折腾就难受）。<br>
+更换图床有两处较为麻烦：</p>
+<ol>
+<li>markdown 文档图片链接批量替换，并且有时没有规律可循。</li>
+<li>大量图片上传到新的图床并且获得图片链接地址。</li>
+</ol>
+<p>基于以上的考虑我对博客做了如下调整。</p>]]></description></item><item><title>VirtualBox 虚拟网卡消失问题</title><link>https://wishlily.github.io/article/2018/03/08/virtualbox-virtual-network-disappear/</link><pubDate>Thu, 08 Mar 2018 11:46:53 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2018/03/08/virtualbox-virtual-network-disappear/</guid><description><![CDATA[<p>VirtualBox 一般安装时会在本地新建一个 <code>VirtualBox Host-Only Network</code> 的虚拟网卡，本机可以通过这个网卡和虚拟机通信。<br>
+然而 Windows 在升级时有可能会丢失掉这个网卡（比如：Windows8 升级到 Windows10），而且升级后原来的网卡还有残留配置，导致 VirtualBox 再新建一个网卡名字会变成 <code>VirtualBox Host-Only Network #2</code>，并且在设置原来的地址时会报地址重复占用的提示。</p>]]></description></item></channel></rss>
