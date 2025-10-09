@@ -1,4 +1,4 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>Wishlily's blog</title><link>https://wishlily.github.io/</link><description>技术学习分享</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Mon, 01 Sep 2025 13:02:00 +0800</lastBuildDate><atom:link href="https://wishlily.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>个人时间追踪</title><link>https://wishlily.github.io/article/2025/09/01/tracker/</link><pubDate>Mon, 01 Sep 2025 13:02:00 +0800</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2025/09/01/tracker/</guid><description><![CDATA[<div class="featured-image">
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>Wishlily's blog</title><link>https://wishlily.github.io/</link><description>技术学习分享</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><lastBuildDate>Thu, 09 Oct 2025 13:55:57 +0800</lastBuildDate><atom:link href="https://wishlily.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>ESP-IDF</title><link>https://wishlily.github.io/article/2025/10/09/esp-idf/</link><pubDate>Thu, 09 Oct 2025 13:55:57 +0800</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2025/10/09/esp-idf/</guid><description>&lt;p>ESP-IDF (Espressif IoT Development Framework) 是乐鑫科技提供的官方物联网开发框架，适用于 ESP32、ESP32-S 和 ESP32-C 系列 SoC。&lt;/p></description></item><item><title>个人时间追踪</title><link>https://wishlily.github.io/article/2025/09/01/tracker/</link><pubDate>Mon, 01 Sep 2025 13:02:00 +0800</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2025/09/01/tracker/</guid><description><![CDATA[<div class="featured-image">
                 <img src="/images/banner/time-tracker.png" referrerpolicy="no-referrer">
             </div><p>之前听播客，听到有人说人生的财富不只是金钱，而是有五种财富：时间财富、社交财富、健康财富、精神财富和财务财富。<br>
 对于金钱，我们总是有很多手段来管理，记账、预算、理财等等，但是对于时间，我们却常常忽略，因为它无时无刻不在，难以量化。<br>
@@ -10,24 +10,4 @@
 <p>开始我怀疑是不是哪里死锁了，找了一圈也没有发现问题；<br>
 后来再次出现该问题时尝试使用 jstack 查看当前状态，然而出现以下信息：</p>]]></description></item><item><title>Docker 使用</title><link>https://wishlily.github.io/article/2019/08/14/docker-apply/</link><pubDate>Wed, 14 Aug 2019 11:40:35 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2019/08/14/docker-apply/</guid><description><![CDATA[<p>Docker 前几年为了配置数据库接触过一次，仅限于 <code>run</code> &amp; <code>start</code> 之类。<br>
 今天详细看看官方文档，记录一下。</p>]]></description></item><item><title>VSCode</title><link>https://wishlily.github.io/article/2019/06/13/vscode/</link><pubDate>Thu, 13 Jun 2019 11:11:19 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2019/06/13/vscode/</guid><description>&lt;p>从 Sublime 投入 VSCode 怀抱。&lt;br>
-自己一些常用插件配置。&lt;/p></description></item><item><title>grpc</title><link>https://wishlily.github.io/article/2019/06/09/grpc/</link><pubDate>Sun, 09 Jun 2019 14:01:02 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2019/06/09/grpc/</guid><description>&lt;p>最近使用了一下 grpc 通信，现在整理一下，防止遗忘。&lt;/p></description></item><item><title>react 组件通信</title><link>https://wishlily.github.io/article/2018/09/29/react-component-communication/</link><pubDate>Sat, 29 Sep 2018 14:59:26 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2018/09/29/react-component-communication/</guid><description>&lt;p>react 使用一些心得记录。&lt;/p></description></item><item><title>RFID：ISO14443A</title><link>https://wishlily.github.io/article/2018/05/18/rfid-iso14443a/</link><pubDate>Fri, 18 May 2018 14:43:30 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2018/05/18/rfid-iso14443a/</guid><description><![CDATA[<p>这是篇几年前总结的文档，现在重新整理一下。<br>
-首先建议看下《<a href="http://bbs.21ic.com/blog-15467-89510.html" target="_blank" rel="noopener noreffer ">看得懂的 RFID 原理</a>》这篇文章，当初找了不少资料就这篇让我明白了些 RFID 是怎么通信的。</p>
-<p>ISO14443A 是常见的协议标准，大致如下：</p>
-<p>载波频率 f：13.56MHz<br>
-数据传输率：13.56MHz/128 = 106Kbit/s<br>
-普通卡 PICC UID：</p>
-<ul>
-<li>4 个字节 32 位数据</li>
-<li>7 个字节</li>
-<li>10 个字节</li>
-</ul>
-<p>各部分协议内容：</p>
-<ol>
-<li>ISO/IEC 14443-1 制定了 PICC 的物理特性</li>
-<li>ISO/IEC 14443-2 制定了射频功率及信号界面特性</li>
-<li>ISO/IEC 14443-3 PICC 初始化和防冲突机制</li>
-<li>ISO/IEC 14443-4 有关交易的协定</li>
-</ol>
-<p>以下通过读卡器读卡来理解该协议，其中缩写表示如下：<br>
-PICC：普通卡（M1 卡）<br>
-PCD：读卡器（PN512）</p>]]></description></item></channel></rss>
+自己一些常用插件配置。&lt;/p></description></item><item><title>grpc</title><link>https://wishlily.github.io/article/2019/06/09/grpc/</link><pubDate>Sun, 09 Jun 2019 14:01:02 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2019/06/09/grpc/</guid><description>&lt;p>最近使用了一下 grpc 通信，现在整理一下，防止遗忘。&lt;/p></description></item><item><title>react 组件通信</title><link>https://wishlily.github.io/article/2018/09/29/react-component-communication/</link><pubDate>Sat, 29 Sep 2018 14:59:26 +0000</pubDate><author>Wishlily</author><guid>https://wishlily.github.io/article/2018/09/29/react-component-communication/</guid><description>&lt;p>react 使用一些心得记录。&lt;/p></description></item></channel></rss>
